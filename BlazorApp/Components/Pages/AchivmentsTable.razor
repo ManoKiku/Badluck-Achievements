@@ -1,0 +1,90 @@
+﻿@if (achivments == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table border="2" align="center">
+        <thead align="center">
+            <tr>
+                <th>Achivment</th>
+                <th>Percent</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var i in achivments)
+            {
+                <tr>
+                    <td>@i.apiName</td>
+                    <td>@i.percent</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int gameId { get; set; }
+
+    private List<SteamAchivment>? achivments;
+
+    class SteamAchivment
+    {
+        public string apiName { get; set; } = string.Empty;
+        public float percent { get; set; } = 0f;
+
+        public SteamAchivment(string apiName, float percent)
+        {
+            this.apiName = apiName;
+            this.percent = percent;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAchievements();
+    }
+
+    public async Task LoadAchievements()
+    {
+        achivments = await GetSteamAchivments(gameId);
+        StateHasChanged();
+    }
+
+    async Task<List<SteamAchivment>> GetSteamAchivments(int gameId)
+    {
+        List<SteamAchivment> achivments = new List<SteamAchivment>();
+
+        HttpClient httpClient = new HttpClient();
+        var response = await httpClient.GetAsync($"http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={gameId}");
+        Console.WriteLine($"started {gameId}");
+
+        if(!response.IsSuccessStatusCode)
+        {
+            return achivments;
+        }
+
+        string? json = await response.Content.ReadAsStringAsync();
+
+        if(json == null)
+        {
+            return achivments;
+        }
+
+        JObject parsed = JObject.Parse(json);
+
+        if (parsed.Count == 0)
+        {
+            return achivments;
+        }
+
+        
+        foreach (var i in parsed["achievementpercentages"]["achievements"])
+        {
+            achivments.Add(new SteamAchivment(i.Value<string>("name")!, float.Parse(i.Value<string>("percent")!)));
+        }
+
+        return achivments;
+    }
+}
