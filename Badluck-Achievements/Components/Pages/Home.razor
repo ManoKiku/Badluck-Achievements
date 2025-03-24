@@ -1,0 +1,85 @@
+﻿@page "/"
+
+<PageTitle>Badluck Achievments</PageTitle>
+
+@if (popularGames == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <main>
+        <aside class="news" width=100px>
+            <h2>News</h2>
+        </aside>
+        <section class="popular-games">
+            <h2>Popular Games</h2>
+            @foreach (var i in popularGames)
+            {
+                <div class="game-item">
+                    <img src="@i.img">
+                    @i.name
+                </div>
+            }
+        </section>
+        <aside class="latest-achievements">
+            <h2>Latest Achievements</h2>
+        </aside>
+    </main>
+}
+
+@code{
+    private List<SteamGame>? popularGames;
+
+    class SteamGame
+    {
+        public string name { get; set; } = string.Empty;
+        public string img { get; set; } = string.Empty;
+
+        public SteamGame(string name, string img)
+        {
+            this.name = name;
+            this.img = img;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Start");
+        popularGames = await GetSteamAchivments();
+    }
+
+    async Task<List<SteamGame>> GetSteamAchivments()
+    {
+        List<SteamGame> popularGames = new List<SteamGame>();
+
+        HttpClient httpClient = new HttpClient();
+        var response = await httpClient.GetAsync($"https://store.steampowered.com/search/results?category1=998&json=1");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return popularGames;
+        }
+
+        string? json = await response.Content.ReadAsStringAsync();
+
+        if (json == null)
+        {
+            return popularGames;
+        }
+
+        JObject parsed = JObject.Parse(json);
+
+        if (parsed.Count == 0)
+        {
+            return popularGames;
+        }
+
+        foreach (var i in parsed["items"])
+        {
+            popularGames.Add(new SteamGame(i.Value<string>("name")!, i.Value<string>("logo")!));
+        }
+
+        return popularGames;
+    }
+}

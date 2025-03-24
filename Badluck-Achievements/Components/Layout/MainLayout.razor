@@ -1,0 +1,37 @@
+﻿@inherits LayoutComponentBase
+
+<header>
+    <div class="logo">
+        <img src="logo.png" width="300px">
+    </div>
+    <nav>
+        <button>Games</button>
+        <button>Leaderboard</button>
+        <button>Achievements</button>
+    </nav>
+    <div class="profile-text">
+        <p>Profile</p>
+    </div>
+    <img class="profile-icon" height="48px" src="https://avatars.fastly.steamstatic.com/86bb9ca8ffeb9a3a0bf83497dce48170f6abff42_full.jpg">
+</header>
+
+<div class="page">
+    <main>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<footer>
+    <div class="footer-content">
+        © 2025 Badluck Achievements. All rights reserved.
+        <a href="https://github.com/ManoKiku" target="_blank">GitHub</a>
+    </div>
+</footer>

@@ -1,4 +1,4 @@
-using BlazorApp.Components;
+using Badluck_Achievments.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
