@@ -1,51 +1,59 @@
 ﻿@page "/"
+@using Badluck_Achievements.Components.Models
 
 <PageTitle>Badluck Achievments</PageTitle>
 
-@if (popularGames == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <main>
-        <aside class="news" width=100px>
-            <h2>News</h2>
-        </aside>
-        <section class="popular-games">
+
+<main>
+    <section class="game-news">
+        <h2>Game news</h2>
+        <article>
+            <h2><a href="#">Exciting Game Update Released!</a></h2>
+            <p>Developers have launched a new patch bringing fresh content and features...</p>
+        </article>
+        <article>
+            <h2><a href="#">New Expansion Announced</a></h2>
+            <p>The upcoming expansion promises an immersive storyline and thrilling gameplay...</p>
+        </article>
+    </section>
+    <section class="popular-games">
+        @if (popularGames == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
             <h2>Popular Games</h2>
             @foreach (var i in popularGames)
             {
-                <div class="game-item">
-                    <img src="@i.img">
-                    @i.name
+                <div class="game-card">
+                    <img class="game-img" src="@i.img" alt="Game Image">
+                    <div class="game-info">@i.name</div>
                 </div>
             }
-        </section>
-        <aside class="latest-achievements">
-            <h2>Latest Achievements</h2>
-        </aside>
-    </main>
-}
+        }
+    </section>
+    <section class="latest-achievements">
+        <h2>Latest achievements</h2>
+        <div class="achievement">
+            <img src="achievement1.png" alt="Achievement Icon">
+            <p>Completed on: <time datetime="2025-03-28">March 28, 2025</time></p>
+            <p>Global Completion: 12.5%</p>
+        </div>
+        <div class="achievement">
+            <img src="achievement2.png" alt="Achievement Icon">
+            <p>Completed on: <time datetime="2025-03-25">March 25, 2025</time></p>
+            <p>Global Completion: 8.3%</p>
+        </div>
+    </section>
+</main>
+
 
 @code{
     private List<SteamGame>? popularGames;
 
-    class SteamGame
-    {
-        public string name { get; set; } = string.Empty;
-        public string img { get; set; } = string.Empty;
-
-        public SteamGame(string name, string img)
-        {
-            this.name = name;
-            this.img = img;
-        }
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Start");
         popularGames = await GetSteamAchivments();
     }
 
@@ -54,6 +62,8 @@ else
         List<SteamGame> popularGames = new List<SteamGame>();
 
         HttpClient httpClient = new HttpClient();
+
+        //Get most popular games
         var response = await httpClient.GetAsync($"https://store.steampowered.com/search/results?category1=998&json=1");
 
         if (!response.IsSuccessStatusCode)
@@ -75,7 +85,8 @@ else
             return popularGames;
         }
 
-        foreach (var i in parsed["items"])
+        //Parse answer json to SteamGame objects
+        foreach (var i in parsed["items"]!)
         {
             popularGames.Add(new SteamGame(i.Value<string>("name")!, i.Value<string>("logo")!));
         }

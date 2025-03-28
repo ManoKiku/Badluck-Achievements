@@ -1,18 +1,41 @@
 ﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Mvc
+@inject AuthenticationStateProvider AuthStateProvider
 
-<header>
-    <div class="logo">
-        <img src="logo.png" width="300px">
+<header class="header">
+    <a href="/" class="logo">
+        <img src="logo.png" alt="Site Logo" class="logo">
+    </a>
+
+    <div class="nav-buttons">
+        <a href="/games">Games</a>
+        <a href="/leaderboard">Leaderboard</a>
+        <a href="/achievements">Achievements</a>
     </div>
-    <nav>
-        <button>Games</button>
-        <button>Leaderboard</button>
-        <button>Achievements</button>
-    </nav>
-    <div class="profile-text">
-        <p>Profile</p>
+
+     <div class="profile">
+@*       <AuthorizeView>
+            <Authorized>
+
+            </Authorized>
+            <NotAuthorized>
+                <a href="/steam-auth/login" class="steam-login-button">
+                    <img src="steam-login-button.png" alt="Login via Steam" />
+                </a>
+            </NotAuthorized>
+        </AuthorizeView>  *@
+
+        <div class="user-info">
+            <a href="/profile" class="profile-link">
+                <img src="https://avatars.fastly.steamstatic.com/2d886481e3244603968c830e15a7b81a1b0d07a1_full.jpg" alt="Profile Picture">
+            </a>
+            <span>ManoKiku</span>
+            <!--  <button @onclick="Logout">Logout</button> -->
+        </div>
+        <!-- Uncomment the line below to show the Register button if necessary -->
+        <!-- <a href="/register" class="register-btn">Register with Steam</a> -->
     </div>
-    <img class="profile-icon" height="48px" src="https://avatars.fastly.steamstatic.com/86bb9ca8ffeb9a3a0bf83497dce48170f6abff42_full.jpg">
 </header>
 
 <div class="page">
@@ -21,12 +44,6 @@
             @Body
         </article>
     </main>
-</div>
-
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
 </div>
 
 <footer>
