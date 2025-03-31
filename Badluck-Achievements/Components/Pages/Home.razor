@@ -1,96 +1,182 @@
 ﻿@page "/"
 @using Badluck_Achievements.Components.Models
+@using global::Components.Services_Achievements.Components
+@inject IHttpClientFactory HttpClientFactory
+@inject IConfiguration Configuration
+@inject SteamAchievementService SteamAchievementService
 
-<PageTitle>Badluck Achievments</PageTitle>
-
+<PageTitle>Badluck Achievements</PageTitle>
 
 <main>
     <section class="game-news">
-        <h2>Game news</h2>
-        <article>
-            <h2><a href="#">Exciting Game Update Released!</a></h2>
-            <p>Developers have launched a new patch bringing fresh content and features...</p>
-        </article>
-        <article>
-            <h2><a href="#">New Expansion Announced</a></h2>
-            <p>The upcoming expansion promises an immersive storyline and thrilling gameplay...</p>
-        </article>
-    </section>
-    <section class="popular-games">
-        @if (popularGames == null)
+        @if (isLoadingNews)
         {
-            <p><em>Loading...</em></p>
+            <p><em>Loading news...</em></p>
+        }
+        else if (news is null || !news.Any())
+        {
+            <p><em>No news available.</em></p>
+        }
+        else
+        {
+            <h2>Game News</h2>
+            @foreach (var item in news)
+            {
+                <article>
+                    <h3><a href="@item.newsUrl" target="_blank">@item.topic</a></h3>
+                    <p>@item.description</p>
+                </article>
+            }
+        }
+    </section>
+
+    <section class="popular-games">
+        @if (isLoadingGames)
+        {
+            <p><em>Loading games...</em></p>
+        }
+        else if (popularGames is null || !popularGames.Any())
+        {
+            <p><em>No popular games found.</em></p>
         }
         else
         {
             <h2>Popular Games</h2>
-            @foreach (var i in popularGames)
+            <div class="games-grid">
+                @foreach (var game in popularGames)
+                {
+                    <div class="game-card">
+                        <img class="game-img" src="@game.img" alt="@game.name">
+                        <div class="game-info">@game.name</div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="latest-achievements">
+        @if (isLoadingAchievements)
+        {
+            <p><em>Loading achievments...</em></p>
+        }
+        else if (achievements is null || !achievements.Any())
+        {
+            <p><em>No achievments available.</em></p>
+        }
+        else
+        {
+            <h2>Latest Achievements</h2>
+            @foreach (var item in achievements)
             {
-                <div class="game-card">
-                    <img class="game-img" src="@i.img" alt="Game Image">
-                    <div class="game-info">@i.name</div>
+                <div class="achievement">
+                    <img src="@item.iconUrl" alt="Achievement Icon">
+                    <p>Completed on: @item.unlockTime.Value</p>
+                    <p>Global Completion: 12.5%</p>
                 </div>
             }
         }
     </section>
-    <section class="latest-achievements">
-        <h2>Latest achievements</h2>
-        <div class="achievement">
-            <img src="achievement1.png" alt="Achievement Icon">
-            <p>Completed on: <time datetime="2025-03-28">March 28, 2025</time></p>
-            <p>Global Completion: 12.5%</p>
-        </div>
-        <div class="achievement">
-            <img src="achievement2.png" alt="Achievement Icon">
-            <p>Completed on: <time datetime="2025-03-25">March 25, 2025</time></p>
-            <p>Global Completion: 8.3%</p>
-        </div>
-    </section>
 </main>
 
-
-@code{
+@code {
     private List<SteamGame>? popularGames;
+    private List<GamingNews>? news;
+    private List<SteamAchievement>? achievements;
+
+    private bool isLoadingNews = true;
+    private bool isLoadingGames = true;
+    private bool isLoadingAchievements = true;
+
+    [CascadingParameter]
+    public string steamId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        popularGames = await GetSteamAchivments();
+        try
+        {
+            await Task.WhenAll(
+                LoadPopularGamesAsync(),
+                LoadGamingNewsAsync(),
+                LoadLatestAchievments()
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading data: {ex.Message}");
+        }
     }
 
-    async Task<List<SteamGame>> GetSteamAchivments()
+    private async Task LoadPopularGamesAsync()
     {
-        List<SteamGame> popularGames = new List<SteamGame>();
-
-        HttpClient httpClient = new HttpClient();
-
-        //Get most popular games
-        var response = await httpClient.GetAsync($"https://store.steampowered.com/search/results?category1=998&json=1");
-
-        if (!response.IsSuccessStatusCode)
+        isLoadingGames = true;
+        try
         {
-            return popularGames;
+            var httpClient = HttpClientFactory.CreateClient();
+            var response = await httpClient.GetAsync("https://store.steampowered.com/search/results?category1=998&json=1");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var parsed = JObject.Parse(json);
+                popularGames = parsed["items"]?
+                    .Select(item => new SteamGame(
+                        item.Value<string>("name") ?? "Unknown",
+                        item.Value<string>("logo") ?? "default.png"
+                    ))
+                    .ToList();
+            }
         }
-
-        string? json = await response.Content.ReadAsStringAsync();
-
-        if (json == null)
+        finally
         {
-            return popularGames;
+            isLoadingGames = false;
         }
+    }
 
-        JObject parsed = JObject.Parse(json);
-
-        if (parsed.Count == 0)
+    private async Task LoadGamingNewsAsync()
+    {
+        isLoadingNews = true;
+        try
         {
-            return popularGames;
-        }
+            var httpClient = HttpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-        //Parse answer json to SteamGame objects
-        foreach (var i in parsed["items"]!)
+            var apiKey = Configuration["ApiKeys:NewsApiKey"];
+            var url = $"https://newsapi.org/v2/everything?q=gaming&apiKey={apiKey}&pageSize=8";
+
+
+            var response = await httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var parsed = JObject.Parse(json);
+                news = parsed["articles"]?
+                    .Select(article => new GamingNews(
+                        article.Value<string>("title") ?? "No title",
+                        article.Value<string>("description") ?? "No description",
+                        article.Value<string>("url") ?? "#"
+                    ))
+                    .ToList();
+            }
+        }
+        finally
         {
-            popularGames.Add(new SteamGame(i.Value<string>("name")!, i.Value<string>("logo")!));
+            isLoadingNews = false;
         }
+    }
 
-        return popularGames;
+    private async Task LoadLatestAchievments()
+    {
+        isLoadingAchievements = true;
+        try
+        {
+            achievements = await SteamAchievementService.GetGameAchievementsAsync(ulong.Parse(steamId), 322170);
+            achievements = achievements.OrderBy(x => x.unlockTime).Skip(Math.Max(0, achievements.Count() - 5)).ToList();
+        }
+        finally
+        {
+            isLoadingAchievements = false;
+        }
     }
 }

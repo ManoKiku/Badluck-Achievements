@@ -16,6 +16,19 @@ h2 {
     color: white;
 }
 
+.header a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.header a:focus {
+    outline: none;
+}
+
+.header a:hover {
+    text-decoration: none;
+}
+
 .header {
     display: flex;
     align-items: center;
@@ -67,7 +80,7 @@ h2 {
     gap: 20px;
 }
 
-.profile img {
+.profile-picture {
     width: 45px;
     height: 45px;
     border-radius: 50%;
@@ -81,21 +94,21 @@ h2 {
     font-weight: 500;
 }
 
-.register-btn {
-    padding: 12px 25px;
-    background-color: #4caf50;
-    border-radius: 25px;
+.user-info a[href="api/auth/logout"] {
+    padding: 8px 16px;
+    background-color: #f44336;
+    border-radius: 20px;
     color: white;
     text-decoration: none;
     font-weight: 500;
-    font-size: 16px;
-    display: inline-block;
+    font-size: 14px;
     transition: background-color 0.3s, transform 0.3s;
+    margin-left: 10px;
 }
 
-.register-btn:hover {
-    background-color: #45a049;
-    transform: translateY(-3px);
+.user-info a[href="api/auth/logout"]:hover {
+    background-color: #912424;
+    transform: translateY(-2px);
 }
 
 main {
@@ -107,7 +120,7 @@ main {
 
 .game-news, .latest-achievements {
     margin-bottom: 15px;
-    max-width: 40%;
+    max-width: 30%;
     margin: 20px auto;
 }
 
@@ -143,7 +156,7 @@ main {
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
     text-align: center;
     width: 100%;
-    max-width: 300px;
+    max-width: 400px;
     height: 200px;
     transition: transform 0.3s ease;
 }
@@ -177,7 +190,7 @@ main {
     align-items: center;
     justify-content: flex-start;
     width: 100%;
-    min-width: 400px;
+    min-width: 300px;
     height: 60px;
     border-radius: 20px;
     overflow: hidden;

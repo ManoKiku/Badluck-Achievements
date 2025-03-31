@@ -1,54 +1,107 @@
-﻿@inherits LayoutComponentBase
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Mvc
-@inject AuthenticationStateProvider AuthStateProvider
+﻿@using SteamWebAPI2.Interfaces
+@using SteamWebAPI2.Utilities
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<header class="header">
-    <a href="/" class="logo">
-        <img src="logo.png" alt="Site Logo" class="logo">
-    </a>
+<CascadingValue Value="@steamId">
+    <header class="header">
+        <a href="/" class="logo">
+            <img src="logo.png" alt="Site Logo" class="logo">
+        </a>
 
-    <div class="nav-buttons">
-        <a href="/games">Games</a>
-        <a href="/leaderboard">Leaderboard</a>
-        <a href="/achievements">Achievements</a>
-    </div>
-
-     <div class="profile">
-@*       <AuthorizeView>
-            <Authorized>
-
-            </Authorized>
-            <NotAuthorized>
-                <a href="/steam-auth/login" class="steam-login-button">
-                    <img src="steam-login-button.png" alt="Login via Steam" />
-                </a>
-            </NotAuthorized>
-        </AuthorizeView>  *@
-
-        <div class="user-info">
-            <a href="/profile" class="profile-link">
-                <img src="https://avatars.fastly.steamstatic.com/2d886481e3244603968c830e15a7b81a1b0d07a1_full.jpg" alt="Profile Picture">
-            </a>
-            <span>ManoKiku</span>
-            <!--  <button @onclick="Logout">Logout</button> -->
+        <div class="nav-buttons">
+            <a href="/games">Games</a>
+            <a href="/leaderboard">Leaderboard</a>
+            <a href="/achievements">Achievements</a>
         </div>
-        <!-- Uncomment the line below to show the Register button if necessary -->
-        <!-- <a href="/register" class="register-btn">Register with Steam</a> -->
-    </div>
-</header>
 
-<div class="page">
-    <main>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+         <div class="profile">
+            <div class="user-info">
+                @if (isAuthenticated)
+                {
+                    <a href="/profile" class="profile-link">
+                        <img src="@avatarUrl" alt="Profile Picture" class="profile-picture">
+                        <span>@nameIdentifier</span>
+                    </a>
 
-<footer>
-    <div class="footer-content">
-        © 2025 Badluck Achievements. All rights reserved.
-        <a href="https://github.com/ManoKiku" target="_blank">GitHub</a>
+                    <a href="api/auth/logout">Logout</a>
+                }
+                else
+                {
+                    <a href="api/auth/login?scheme=Steam">
+                        <img src="https://community.akamai.steamstatic.com/public/images/signinthroughsteam/sits_01.png" alt="Sign in through Steam" />
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <div class="page">
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
     </div>
-</footer>
+
+    <footer>
+        <div class="footer-content">
+            © 2025 Badluck Achievements. All rights reserved.
+            <a href="https://github.com/ManoKiku" target="_blank">GitHub</a>
+        </div>
+    </footer>
+</CascadingValue>
+
+@code {
+    private bool isAuthenticated;
+    private string nameIdentifier = string.Empty;
+    public string steamId { get; set; } = string.Empty;
+    private string avatarUrl = string.Empty;
+
+    [Inject]
+    private IConfiguration Configuration { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+        if (isAuthenticated)
+        {
+            steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!;
+
+            // Steam ID will be in the format "https://steamcommunity.com/openid/id/7656119..."
+            // To get a numeric SteamID64:
+            if (steamId != null)
+            {
+                steamId = steamId.Split('/').Last();
+                await LoadSteamUserInfo(steamId);
+            }
+        }
+    }
+
+    private async Task LoadSteamUserInfo(string steamId64)
+    {
+        var apiKey = Configuration["ApiKeys:SteamApiKey"];
+        Console.WriteLine(apiKey);
+        var steamInterface = new SteamWebInterfaceFactory(apiKey);
+        var steamUser = steamInterface.CreateSteamWebInterface<SteamUser>(new HttpClient());
+
+        Console.WriteLine();
+        try
+        {
+            var playerSummaryResponse = await steamUser.GetPlayerSummaryAsync(ulong.Parse(steamId64));
+            var playerSummary = playerSummaryResponse.Data;
+
+
+            avatarUrl = playerSummary.AvatarFullUrl;
+            nameIdentifier = playerSummary.Nickname;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при загрузке информации Steam: {ex.Message}");
+        }
+    }
+}
