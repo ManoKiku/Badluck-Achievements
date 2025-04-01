@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Badluck_Achievements.Components.Models
+@using System.Text.RegularExpressions
 @using global::Components.Services_Achievements.Components
 @inject IHttpClientFactory HttpClientFactory
 @inject IConfiguration Configuration
@@ -7,54 +8,63 @@
 
 <PageTitle>Badluck Achievements</PageTitle>
 
-<main>
-    <section class="game-news">
-        @if (isLoadingNews)
-        {
-            <p><em>Loading news...</em></p>
-        }
-        else if (news is null || !news.Any())
-        {
-            <p><em>No news available.</em></p>
-        }
-        else
-        {
-            <h2>Game News</h2>
+<article class="content">
+    @if (isLoadingNews)
+    {
+        <p><em>Loading news...</em></p>
+    }
+    else if (news is null || !news.Any())
+    {
+        <p><em>No news available.</em></p>
+    }
+    else
+    {
+        <section class="game-news">
+            <h2><i class="fas fa-newspaper"></i> Game News</h2>
             @foreach (var item in news)
             {
-                <article>
+                <div class="news-card">
                     <h3><a href="@item.newsUrl" target="_blank">@item.topic</a></h3>
                     <p>@item.description</p>
-                </article>
-            }
-        }
-    </section>
-
-    <section class="popular-games">
-        @if (isLoadingGames)
-        {
-            <p><em>Loading games...</em></p>
-        }
-        else if (popularGames is null || !popularGames.Any())
-        {
-            <p><em>No popular games found.</em></p>
-        }
-        else
-        {
-            <h2>Popular Games</h2>
-            <div class="games-grid">
-                @foreach (var game in popularGames)
-                {
-                    <div class="game-card">
-                        <img class="game-img" src="@game.img" alt="@game.name">
-                        <div class="game-info">@game.name</div>
+                    <div class="news-meta">
+                        <span><i class="far fa-calendar"></i> @item.time?.ToString("yyyy MMM dd")</span>
                     </div>
-                }
-            </div>
-        }
-    </section>
+                </div>
+            }
+        </section>
+    }
 
-    <section class="latest-achievements">
+    @if (isLoadingGames)
+    {
+        <p><em>Loading games...</em></p>
+    }
+    else if (popularGames is null || !popularGames.Any())
+    {
+        <p><em>No games available.</em></p>
+    }
+    else
+    {
+        <section class="popular-games">
+            <h2><i class="fas fa-fire"></i> Popular Games</h2>
+            @foreach (var item in popularGames)
+            {
+                <div class="games-grid">
+                    <div class="game-card">
+                        <img class="game-banner" src="@item.img" alt="Game Banner">
+                        <div class="game-overlay">
+                            <div class="game-title"> @item.name</div>
+                            <div class="game-stats">
+                                <span><i class="fas fa-users">  @FormatNumberToK(@item.playersCount) players</i></span>
+                                <span><i class="fas fa-medal">  @item.achievmentsCount achievements</i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </section>
+    }
+
+    <div class="sidebar-right">
         @if (isLoadingAchievements)
         {
             <p><em>Loading achievments...</em></p>
@@ -65,18 +75,49 @@
         }
         else
         {
-            <h2>Latest Achievements</h2>
-            @foreach (var item in achievements)
-            {
-                <div class="achievement">
-                    <img src="@item.iconUrl" alt="Achievement Icon">
-                    <p>Completed on: @item.unlockTime.Value</p>
-                    <p>Global Completion: 12.5%</p>
-                </div>
-            }
+            <section class="latest-achievements">
+                <h2><i class="fas fa-trophy"></i> Random game achievements</h2>
+                @foreach (var item in achievements)
+                {
+                    <div class="achievement-card">
+                        <img src="@item.iconUrl" alt="Achievement Icon" class="achievement-icon">
+                        <div class="achievement-details">
+                            <div class="achievement-title">@item.name</div>
+                            <div class="achievement-meta">
+                                <span>Completed: @item.unlockTime?.ToString("yyyy MMM dd")</span>
+                                <span>Rarity: @item.achievePercentage%</span>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar" style="width: @item.achievePercentage%"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </section>
         }
-    </section>
-</main>
+
+
+        <section class="user-stats">
+            <h2><i class="fas fa-chart-line"></i> Your Stats</h2>
+            <div class="stat-item">
+                <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
+                <span class="stat-value">247</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label"><i class="fas fa-gamepad"></i> Games Played</span>
+                <span class="stat-value">42</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
+                <span class="stat-value">68%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label"><i class="fas fa-ranking-star"></i> Global Rank</span>
+                <span class="stat-value">#1,245</span>
+            </div>
+        </section>
+    </div>
+</article>
 
 @code {
     private List<SteamGame>? popularGames;
@@ -88,7 +129,7 @@
     private bool isLoadingAchievements = true;
 
     [CascadingParameter]
-    public string steamId { get; set; }
+    public Sesion sesion { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -116,14 +157,51 @@
 
             if (response.IsSuccessStatusCode)
             {
+                popularGames = new List<SteamGame>();
+
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = JObject.Parse(json);
-                popularGames = parsed["items"]?
-                    .Select(item => new SteamGame(
-                        item.Value<string>("name") ?? "Unknown",
-                        item.Value<string>("logo") ?? "default.png"
-                    ))
-                    .ToList();
+
+                await Parallel.ForEachAsync(parsed["items"]!.Take(8), async (item, ct) =>
+                {
+                    try
+                    {
+                        Match match = Regex.Match(item.Value<string>("logo")!, @"/apps/(\d+)");
+                        string? appID = string.Empty;
+                        if (match.Success)
+                        {
+                            appID = match.Groups[1].Value;
+                        }
+
+                        var httpClient = HttpClientFactory.CreateClient();
+                        var url = $"http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={appID}&format=json";
+
+                        var response = await httpClient.GetAsync(url);
+
+                        uint achievementsCount = 0;
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var json = await response.Content.ReadAsStringAsync();
+                            var parsed = JObject.Parse(json);
+                            achievementsCount = (uint)parsed["achievementpercentages"]["achievements"].Count();
+                        }
+
+                        uint playersCount = await SteamAchievementService.
+                        GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID));
+
+                        popularGames.Add(new SteamGame(
+                            item.Value<string>("name") ?? "Unknown",
+                            item.Value<string>("logo") ?? "default.png",
+                            achievementsCount,
+                            playersCount));
+                        }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+
+
+                });
             }
         }
         finally
@@ -131,6 +209,7 @@
             isLoadingGames = false;
         }
     }
+
 
     private async Task LoadGamingNewsAsync()
     {
@@ -142,7 +221,7 @@
             httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
             var apiKey = Configuration["ApiKeys:NewsApiKey"];
-            var url = $"https://newsapi.org/v2/everything?q=gaming&apiKey={apiKey}&pageSize=8";
+            var url = $"https://newsapi.org/v2/everything?q=gaming&apiKey={apiKey}&pageSize=3";
 
 
             var response = await httpClient.GetAsync(url);
@@ -151,13 +230,14 @@
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = JObject.Parse(json);
+
                 news = parsed["articles"]?
                     .Select(article => new GamingNews(
                         article.Value<string>("title") ?? "No title",
                         article.Value<string>("description") ?? "No description",
-                        article.Value<string>("url") ?? "#"
-                    ))
-                    .ToList();
+                        article.Value<string>("url") ?? "#",
+                        DateTime.Parse(article.Value<string>("publishedAt")!)
+                )).ToList();
             }
         }
         finally
@@ -171,12 +251,36 @@
         isLoadingAchievements = true;
         try
         {
-            achievements = await SteamAchievementService.GetGameAchievementsAsync(ulong.Parse(steamId), 322170);
-            achievements = achievements.OrderBy(x => x.unlockTime).Skip(Math.Max(0, achievements.Count() - 5)).ToList();
+            if(sesion.isAuthenticated)
+            {
+                Random random = new Random();
+                achievements = new List<SteamAchievement>();
+                for (int i = 0; achievements.Where(x => x.isAchieved).Count() == 0 && i < 10; ++i)
+                {
+                    var games = await SteamAchievementService.GetPlayerGames(ulong.Parse(sesion.steamId));
+
+                    achievements = await SteamAchievementService.
+                            GetGameAchievementsAsync(ulong.Parse(sesion.steamId),
+                            games[random.Next(0, games.Count() - 1)].appID);
+                }
+
+
+                achievements = achievements.OrderBy(x => x.unlockTime).Skip(Math.Max(0, achievements.Count() - 5)).Reverse().ToList();
+            }
         }
         finally
         {
             isLoadingAchievements = false;
         }
+    }
+
+    public static string FormatNumberToK(uint number)
+    {
+        if (number >= 1000000)
+            return (number / 1000000).ToString("0.#") + "M";
+        else if (number >= 1000)
+            return (number / 1000).ToString("0.#") + "k";
+        else
+            return number.ToString();
     }
 }

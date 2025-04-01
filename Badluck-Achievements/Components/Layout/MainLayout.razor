@@ -1,37 +1,39 @@
-﻿@using SteamWebAPI2.Interfaces
+﻿@using Badluck_Achievements.Components.Models
+@using SteamWebAPI2.Interfaces
 @using SteamWebAPI2.Utilities
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<CascadingValue Value="@steamId">
+<CascadingValue Value="@sesion">
     <header class="header">
         <a href="/" class="logo">
             <img src="logo.png" alt="Site Logo" class="logo">
         </a>
 
         <div class="nav-buttons">
-            <a href="/games">Games</a>
-            <a href="/leaderboard">Leaderboard</a>
-            <a href="/achievements">Achievements</a>
+            <a href="/games"><i class="fas fa-gamepad"></i> Games</a>
+            <a href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a>
+            <a href="/achievements"><i class="fas fa-medal"></i> Achievements</a>
         </div>
 
-         <div class="profile">
-            <div class="user-info">
-                @if (isAuthenticated)
-                {
-                    <a href="/profile" class="profile-link">
-                        <img src="@avatarUrl" alt="Profile Picture" class="profile-picture">
-                        <span>@nameIdentifier</span>
-                    </a>
-
-                    <a href="api/auth/logout">Logout</a>
-                }
-                else
-                {
-                    <a href="api/auth/login?scheme=Steam">
-                        <img src="https://community.akamai.steamstatic.com/public/images/signinthroughsteam/sits_01.png" alt="Sign in through Steam" />
-                    </a>
-                }
+        <div class="profile-container">
+            <div class="profile">
+                <div class="user-info">
+                    @if (sesion.isAuthenticated)
+                    {
+                        <a href="/profile" class="profile-link">
+                            <img src="@avatarUrl" alt="Profile Picture" class="profile-picture">
+                            <span>@nameIdentifier</span>
+                        </a>
+                        <a href="api/auth/logout">Logout</a>
+                    }
+                    else
+                    {
+                        <a href="api/auth/login?scheme=Steam" class="steam-login">
+                            <img src="https://community.akamai.steamstatic.com/public/images/signinthroughsteam/sits_01.png" alt="Sign in through Steam">
+                        </a>
+                    }
+                </div>
             </div>
         </div>
     </header>
@@ -46,16 +48,26 @@
 
     <footer>
         <div class="footer-content">
-            © 2025 Badluck Achievements. All rights reserved.
-            <a href="https://github.com/ManoKiku" target="_blank">GitHub</a>
+            <div>© 2025 Badluck Achievements. All rights reserved.</div>
+            <div class="footer-links">
+                <a href="/about">About</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="https://github.com/ManoKiku" target="_blank">GitHub</a>
+            </div>
+            <div class="social-icons">
+                <a href="https://www.youtube.com/channel/UC2uOhLFsjJWyzk3qPs7x4ig"><i class="fab fa-youtube"></i></a>
+                <a href="https://discord.com/users/549927558339100674"><i class="fab fa-discord"></i></a>
+                <a href="https://steamcommunity.com/id/ManoKiku/"><i class="fab fa-steam"></i></a>
+            </div>
         </div>
     </footer>
 </CascadingValue>
 
 @code {
-    private bool isAuthenticated;
+
+    public Sesion sesion { get; set; } = new Sesion();
     private string nameIdentifier = string.Empty;
-    public string steamId { get; set; } = string.Empty;
     private string avatarUrl = string.Empty;
 
     [Inject]
@@ -66,18 +78,18 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+        sesion.isAuthenticated = user.Identity?.IsAuthenticated ?? false;
 
-        if (isAuthenticated)
+        if (sesion.isAuthenticated)
         {
-            steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!;
+            sesion.steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!;
 
             // Steam ID will be in the format "https://steamcommunity.com/openid/id/7656119..."
             // To get a numeric SteamID64:
-            if (steamId != null)
+            if (sesion.steamId != null)
             {
-                steamId = steamId.Split('/').Last();
-                await LoadSteamUserInfo(steamId);
+                sesion.steamId = sesion.steamId.Split('/').Last();
+                await LoadSteamUserInfo(sesion.steamId);
             }
         }
     }
@@ -104,4 +116,5 @@
             Console.WriteLine($"Ошибка при загрузке информации Steam: {ex.Message}");
         }
     }
+
 }
