@@ -138,7 +138,7 @@
             await Task.WhenAll(
                 LoadPopularGamesAsync(),
                 LoadGamingNewsAsync(),
-                LoadLatestAchievments()
+                LoadLatestAchievements()
             );
         }
         catch (Exception ex)
@@ -246,7 +246,7 @@
         }
     }
 
-    private async Task LoadLatestAchievments()
+    private async Task LoadLatestAchievements()
     {
         isLoadingAchievements = true;
         try

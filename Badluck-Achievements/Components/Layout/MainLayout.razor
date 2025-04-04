@@ -22,8 +22,8 @@
                     @if (sesion.isAuthenticated)
                     {
                         <a href="/profile" class="profile-link">
-                            <img src="@avatarUrl" alt="Profile Picture" class="profile-picture">
-                            <span>@nameIdentifier</span>
+                            <img src="@sesion.avatarUrl" alt="Profile Picture" class="profile-picture">
+                            <span>@sesion.nameIdentifier</span>
                         </a>
                         <a href="api/auth/logout">Logout</a>
                     }
@@ -67,8 +67,6 @@
 @code {
 
     public Sesion sesion { get; set; } = new Sesion();
-    private string nameIdentifier = string.Empty;
-    private string avatarUrl = string.Empty;
 
     [Inject]
     private IConfiguration Configuration { get; set; }
@@ -108,8 +106,8 @@
             var playerSummary = playerSummaryResponse.Data;
 
 
-            avatarUrl = playerSummary.AvatarFullUrl;
-            nameIdentifier = playerSummary.Nickname;
+            sesion.avatarUrl = playerSummary.AvatarFullUrl;
+            sesion.nameIdentifier = playerSummary.Nickname;
         }
         catch (Exception ex)
         {

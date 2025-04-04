@@ -19,8 +19,6 @@ namespace Components.Services_Achievements.Components
         {
             _steamApiKey = steamApiKey;
             _steamFactory = new SteamWebInterfaceFactory(_steamApiKey);
-            _steamFactory.
-                CreateSteamWebInterface<SteamUser>().
         }
 
         public async Task<uint> GetNumberOfCurrentPlayersForGameAsync(uint appId)

@@ -1,0 +1,189 @@
+﻿@page "/Profile"
+@using Badluck_Achievements.Components.Models
+
+<div class="page">
+    <main>
+        <article class="content px-4">
+            <div class="profile-layout">
+                <!-- Left Profile Block -->
+                <div class="profile-left">
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <img src="https://avatars.cloudflare.steamstatic.com/2d886481e3244603968c830e15a7b81a1b0d07a1_full.jpg" alt="User Avatar" class="profile-avatar">
+                            <h2 class="profile-username">ManoKiku</h2>
+                            <span class="profile-steamid">SteamID: 76561198123456789</span>
+                        </div>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
+                                <span class="stat-value">142</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
+                                <span class="stat-value">3 748</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
+                                <span class="stat-value">68%</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
+                                <span class="stat-value">2,842 hrs</span>
+                            </div>
+                        </div>
+                        <div class="profile-badges">
+                            <h3><i class="fas fa-award"></i> Recent Badges</h3>
+                            <div class="badges-grid">
+                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/df3ad0f25ca26c549030f922214c9da1c0948070.jpg" alt="Badge 1" class="badge-icon">
+                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 2" class="badge-icon">
+                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/3c9e3748ec8cd6b9a1503b4d518fdaa5cc930360.jpg" alt="Badge 3" class="badge-icon">
+                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 4" class="badge-icon">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Games Block -->
+                <div class="profile-center">
+                    <div class="games-header">
+                        <h2><i class="fas fa-gamepad"></i> Your Games</h2>
+                        <div class="games-filter">
+                            <select class="filter-select">
+                                <option>All Games</option>
+                                <option>100% Completed</option>
+                                <option>In Progress</option>
+                                <option>Not Played</option>
+                            </select>
+                        </div>
+                    </div>
+                        
+                    <div class="user-games-grid">
+                        <!-- Game 1 -->
+                        <div class="user-game-card">
+                            <img src="game1.jpg" alt="Game Banner" class="game-banner">
+                            <div class="game-overlay">
+                                <div class="game-title">The Witcher 3</div>
+                                <div class="game-progress">
+                                    <div class="progress-bar" style="width: 87%"></div>
+                                    <span>87% (53/60)</span>
+                                </div>
+                                <div class="game-playtime">142 hrs</div>
+                            </div>
+                        </div>
+                            
+                        <!-- Game 2 -->
+                        <div class="user-game-card">
+                            <img src="game2.jpg" alt="Game Banner" class="game-banner">
+                            <div class="game-overlay">
+                                <div class="game-title">Elden Ring</div>
+                                <div class="game-progress">
+                                    <div class="progress-bar" style="width: 100%"></div>
+                                    <span>100% (42/42)</span>
+                                </div>
+                                <div class="game-playtime">98 hrs</div>
+                            </div>
+                        </div>
+                            
+                        <!-- Game 3-5 would go here -->
+                    </div>
+                        
+                    <div class="pagination">
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <span class="page-dots">...</span>
+                        <button class="page-btn">12</button>
+                        <button class="page-next"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Right Analytics Block -->
+                <div class="profile-right">
+                    <div class="analytics-card">
+                        <h2><i class="fas fa-chart-pie"></i> Achievement Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="achievementChart"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
+                            <div class="legend-item"><span class="legend-color" style="background: #FF9800;"></span> In Progress</div>
+                            <div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Not Started</div>
+                        </div>
+                    </div>
+                        
+                    <div class="recent-activity">
+                        <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-medal gold"></i></div>
+                            <div class="activity-details">
+                                <div class="activity-text">Unlocked "The Wild Card" in Cyberpunk 2077</div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-gamepad"></i></div>
+                            <div class="activity-details">
+                                <div class="activity-text">Started playing Stardew Valley</div>
+                                <div class="activity-time">1 day ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-medal silver"></i></div>
+                            <div class="activity-details">
+                                <div class="activity-text">Unlocked "Legendary" in Halo Infinite</div>
+                                <div class="activity-time">3 days ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+</div>
+
+<script>
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/styles/profile-styles.css';
+        
+    document.head.appendChild(link);
+</script>
+
+<!-- Chart.js for analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Sample chart initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('achievementChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'In Progress', 'Not Started'],
+                datasets: [{
+                    data: [45, 30, 25],
+                    backgroundColor: [
+                        '#4CAF50',
+                        '#FF9800',
+                        '#F44336'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+@code {
+    [CascadingParameter]
+    public Sesion sesion { get; set; }
+}
