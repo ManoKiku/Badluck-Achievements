@@ -22,6 +22,15 @@ body {
     position: relative;
 }
 
+a {
+    text-decoration: none;
+}
+
+.profile-link {
+    color: white;
+    font-size: 15px;
+}
+
 .header {
     display: flex;
     flex-wrap: wrap;
@@ -169,6 +178,13 @@ h2::after {
     transform: translateY(-5px);
 }
 
+.game-stats {
+    font-size: 13px;
+    position: absolute;
+    bottom: -5px;
+    right: 5px;
+}
+
 .games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -176,11 +192,16 @@ h2::after {
 }
 
 .game-card {
-    height: 150px;
+    height: 45px;
+    margin-bottom: 30px;
     border-radius: 10px;
     overflow: hidden;
     position: relative;
     transition: transform 0.3s;
+}
+
+.game-card img {
+    border-radius: 10px;
 }
 
 .game-card:hover {
@@ -191,14 +212,20 @@ h2::after {
     position: absolute;
     bottom: 0;
     left: 0;
+    top: 0px;
     right: 0;
     padding: 15px;
     background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
 }
 
 .game-title {
+    position: absolute;
+    top: 0;
+    right: 5px;
+    left: 0;
     font-size: 1.1rem;
     font-weight: bold;
+    text-align: end;
 }
 
 .achievements-section, .stats-section {
@@ -225,6 +252,7 @@ h2::after {
     width: 50px;
     height: 50px;
     object-fit: cover;
+    border-radius: 10px;
 }
 
 .achievement-info {
@@ -399,7 +427,7 @@ footer {
     }
 
     .game-card {
-        height: 120px;
+        height: 45px;
     }
 }
 

@@ -221,7 +221,7 @@
             httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
             var apiKey = Configuration["ApiKeys:NewsApiKey"];
-            var url = $"https://newsapi.org/v2/everything?q=gaming&apiKey={apiKey}&pageSize=3";
+            var url = $"https://newsapi.org/v2/everything?q=gaming&apiKey={apiKey}&pageSize=2";
 
 
             var response = await httpClient.GetAsync(url);
@@ -236,8 +236,8 @@
                         article.Value<string>("title") ?? "No title",
                         article.Value<string>("description") ?? "No description",
                         article.Value<string>("url") ?? "#",
-                        DateTime.Parse(article.Value<string>("publishedAt")!)
-                )).ToList();
+                        DateTime.ParseExact(article.Value<string>("publishedAt")!, "MM/dd/yyyy HH:mm:ss", null)
+                )).Reverse().ToList();
             }
         }
         finally
@@ -255,10 +255,9 @@
             {
                 Random random = new Random();
                 achievements = new List<SteamAchievement>();
+                var games = await SteamAchievementService.GetPlayerGames(ulong.Parse(sesion.steamId));
                 for (int i = 0; achievements.Where(x => x.isAchieved).Count() == 0 && i < 10; ++i)
                 {
-                    var games = await SteamAchievementService.GetPlayerGames(ulong.Parse(sesion.steamId));
-
                     achievements = await SteamAchievementService.
                             GetGameAchievementsAsync(ulong.Parse(sesion.steamId),
                             games[random.Next(0, games.Count() - 1)].appID);

@@ -59,8 +59,8 @@ namespace Components.Services_Achievements.Components
                     name = g.Name,
                     playtimeForever = g.PlaytimeForever.Minutes,
                     playtime2Weeks = g.PlaytimeLastTwoWeeks?.Minutes,
-                    iconUrl = $"http://media.steampowered.com/steamcommunity/public/images/apps/{g.AppId}/{g.ImgIconUrl}.jpg",
-                    logoUrl = $"http://media.steampowered.com/steamcommunity/public/images/apps/{g.AppId}/{g.ImgLogoUrl}.jpg"
+                    iconUrl = g.ImgIconUrl,
+                    logoUrl = g.ImgLogoUrl
                 })
                 .ToList();
 
@@ -120,8 +120,7 @@ namespace Components.Services_Achievements.Components
                             name = a.Name,
                             isAchieved = a.Achieved == 1,
                             unlockTime = a.UnlockTime.ToUnixTimeStamp() > 0 ? a.UnlockTime : null,
-                            iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ?
-                    $"https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/{appId}/{sa.Icon}" : null,
+                            iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ? $"{sa.Icon}" : null,
                             achievePercentage = await GetAchievementPercentage(appId, a.APIName)
                         };
                     })
@@ -145,7 +144,7 @@ namespace Components.Services_Achievements.Components
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = JObject.Parse(json);
-                return double.Parse(parsed["achievementpercentages"]!["achievements"]!["achievement"]
+                return double.Parse(parsed["achievementpercentages"]["achievements"]["achievement"]
                     .Where(x => x["name"].ToString() == achievementApiName).First()["percent"].ToString());
             }
             else
