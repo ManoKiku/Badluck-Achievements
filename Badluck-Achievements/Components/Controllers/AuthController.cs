@@ -16,4 +16,11 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync();
         return LocalRedirect(returnUrl);
     }
+
+    [HttpGet("nonfile")]
+    public async Task<IActionResult> Nonfile(string returnUrl = "/")
+    {
+        await HttpContext.SignOutAsync();
+        return LocalRedirect(returnUrl);
+    }
 }

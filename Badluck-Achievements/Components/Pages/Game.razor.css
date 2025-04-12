@@ -1,0 +1,108 @@
+﻿
+
+h3, h2, h1 {
+    color: #2A3F5F;
+}
+
+span, p {
+    color: white;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 40px;
+    max-width: 1440px;
+    margin: 40px auto;
+    padding: 0 40px;
+}
+
+/* Left Panel */
+.game-profile {
+    background: #101d31;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.game-logo {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.game-title {
+    font-size: 1.8rem;
+    margin: 0 0 16px 0;
+    color: #2A3F5F;
+}
+
+.game-stats {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.game-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.achievement-card {
+    background: #101d31;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.achievement-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.achievement-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+}
+
+.progress-bar {
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #2A3F5F;
+    width: var(--progress);
+}
+
+.analytics-panel {
+    background: #101d31;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.chart-container {
+    margin: 24px 0;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 0 24px;
+    }
+}

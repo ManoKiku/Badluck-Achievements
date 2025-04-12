@@ -1,5 +1,4 @@
 using Badluck_Achievements.Components;
-using Badluck_Achievements.Components.Pages;
 using Components.Services_Achievements.Components;
 
 var builder = WebApplication.CreateBuilder(args);

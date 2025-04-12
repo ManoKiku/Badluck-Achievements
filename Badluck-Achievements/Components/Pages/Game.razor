@@ -1,0 +1,104 @@
+﻿@page "/game"
+<div class="container">
+    <div class="game-profile">
+        <img src="game-logo.jpg" alt="Game Logo" class="game-logo">
+        <h1 class="game-title">Cyber Revolution</h1>
+        <ul class="game-stats">
+            <li class="game-stat">
+                <span>Total Achievements</span>
+                <span>148</span>
+            </li>
+            <li class="game-stat">
+                <span>Your Progress</span>
+                <span>65%</span>
+            </li>
+            <li class="game-stat">
+                <span>Global Average</span>
+                <span>42%</span>
+            </li>
+            <li class="game-stat">
+                <span>Last Updated</span>
+                <span>2024-03-15</span>
+            </li>
+        </ul>
+    </div>
+
+    <main>
+        <div class="achievements-grid">
+            <div class="achievement-card">
+                <div class="achievement-header">
+                    <img src="achievement-icon.jpg" class="achievement-icon" alt="Icon">
+                    <div>
+                        <h3>Neon Dominator</h3>
+                        <p>0.7% of players earned this</p>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 12%"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div class="analytics-panel">
+        <h2>Progress Analytics</h2>
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Chart(document.getElementById('progressChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Completed', 'In Progress', 'Locked'],
+            datasets: [{
+                data: [65, 25, 10],
+                backgroundColor: [
+                    '#2A3F5F',
+                    '#4A6572',
+                    '#DEE2E6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                y: { display: false },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Combat', 'Exploration', 'Story', 'Collection'],
+            datasets: [{
+                data: [35, 25, 20, 20],
+                backgroundColor: [
+                    '#2A3F5F',
+                    '#4A6572',
+                    '#778899',
+                    '#DEE2E6'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>

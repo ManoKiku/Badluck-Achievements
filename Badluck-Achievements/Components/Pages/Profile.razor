@@ -141,14 +141,6 @@
     </main>
 </div>
 
-<script>
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/styles/profile-styles.css';
-        
-    document.head.appendChild(link);
-</script>
-
 <!-- Chart.js for analytics -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -184,6 +176,5 @@
 </script>
 
 @code {
-    [CascadingParameter]
     public Sesion sesion { get; set; }
 }

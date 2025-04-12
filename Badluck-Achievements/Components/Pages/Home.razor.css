@@ -1,0 +1,327 @@
+﻿
+
+a {
+    text-decoration: none;
+}
+
+article {
+    margin: auto;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.content-block {
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+    color: white;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #ff8a00, #e52e71);
+}
+
+.news-card {
+    background: rgba(40, 40, 40, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    transition: transform 0.3s;
+    border-left: 3px solid #ff9800;
+}
+
+    .news-card:hover {
+        transform: translateY(-5px);
+    }
+
+.game-stats {
+    font-size: 13px;
+    position: absolute;
+    bottom: -5px;
+    right: 5px;
+}
+
+.game-card {
+    height: 45px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s;
+}
+
+    .game-card img {
+        border-radius: 10px;
+    }
+
+    .game-card:hover {
+        transform: scale(1.03);
+    }
+
+.game-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    top: 0px;
+    right: 0;
+    padding: 15px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.game-title {
+    position: absolute;
+    top: 0;
+    right: 5px;
+    left: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: end;
+}
+
+.achievements-section, .stats-section {
+    margin-bottom: 30px;
+}
+
+.achievement-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(40, 40, 40, 0.6);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    transition: transform 0.3s;
+    border-left: 3px solid #4CAF50;
+}
+
+    .achievement-card:hover {
+        transform: translateY(-5px);
+    }
+
+.achievement-icon {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+}
+
+footer {
+    background: rgba(0, 29, 61, 0.9);
+    padding: 20px 5%;
+    text-align: center;
+    width: 100%;
+    margin-top: 40px;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+    .footer-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s;
+    }
+
+        .footer-links a:hover {
+            color: #ff9800;
+        }
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+    .social-icons a {
+        color: white;
+        font-size: 1.5rem;
+        transition: transform 0.3s;
+    }
+
+        .social-icons a:hover {
+            transform: translateY(-5px);
+        }
+
+@media (min-width: 992px) {
+    .header {
+        flex-wrap: nowrap;
+        padding: 20px 5%;
+        justify-content: space-between;
+    }
+
+    .logo-container {
+        width: auto;
+        order: 1;
+        justify-content: flex-start;
+    }
+
+    .nav-buttons {
+        width: auto;
+        order: 2;
+        margin: 0;
+        justify-content: center;
+    }
+
+    .profile-container {
+        width: auto;
+        order: 3;
+        margin: 0;
+        justify-content: flex-end;
+    }
+
+    .content {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .game-news {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .popular-games {
+        flex: 2;
+        min-width: 400px;
+    }
+
+    .sidebar-right {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .page {
+        padding: 30px 5%;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .header {
+        justify-content: center;
+    }
+
+    .logo-container {
+        justify-content: center;
+    }
+
+    .profile-container {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 767px) {
+    body {
+        font-size: 14px;
+    }
+
+    .header {
+        padding: 15px;
+        justify-content: center;
+    }
+
+    .logo {
+        width: 250px;
+    }
+
+    .nav-buttons a {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .profile-container {
+        justify-content: center;
+    }
+
+    .content-block {
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .achievements-section, .stats-section {
+        margin-bottom: 20px;
+    }
+
+    .achievement-card {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 12px;
+    }
+
+    .logo {
+        width: 250px;
+    }
+
+    .nav-buttons a {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .content-block {
+        padding: 15px;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    .achievement-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+        padding: 15px 10px;
+    }
+
+    .achievements-section, .stats-section {
+        margin-bottom: 15px;
+    }
+}
