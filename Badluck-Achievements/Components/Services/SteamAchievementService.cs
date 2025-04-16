@@ -5,8 +5,11 @@ using Steam.Models.SteamCommunity;
 using Steam.Models.SteamPlayer;
 using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Mappings;
+using SteamWebAPI2.Models;
 using SteamWebAPI2.Utilities;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Components.Services_Achievements.Components
 {
@@ -44,6 +47,13 @@ namespace Components.Services_Achievements.Components
                 CreateSteamWebInterface<SteamUserStats>().
                 GetPlayerAchievementsAsync(appId, steamUserId);
             return response.Data;
+        }
+
+        public async Task<PlayerSummaryModel> GetPlayerSummaries(ulong steamUserId)
+        {
+            var response = await _steamFactory.
+                CreateSteamWebInterface<SteamUser>().GetPlayerSummariesAsync(new ReadOnlyCollection<ulong>(new List<ulong>() { steamUserId}));
+            return response.Data.First();   
         }
 
         public async Task<List<SteamPlayerGame>> GetPlayerGames(ulong steamId)

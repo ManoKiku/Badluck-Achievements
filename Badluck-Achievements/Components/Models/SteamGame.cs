@@ -1,6 +1,6 @@
 ﻿namespace Badluck_Achievements.Components.Models
 {
-    class SteamGame
+    public class SteamGame
     {
         // Game name
         public string name { get; set; } = string.Empty;

@@ -1,49 +1,66 @@
-﻿@page "/Profile"
+﻿@page "/User"
+@inject NavigationManager NavigationManager
+
 @using Badluck_Achievements.Components.Models
+@using Microsoft.AspNetCore.WebUtilities
+@using global::Components.Services_Achievements.Components
+@inject BadluckAchievementsService BadluckAchievementsService
+@inject SteamAchievementService SteamAchievementService
+
 
 <div class="page">
     <main>
         <article class="content px-4">
             <div class="profile-layout">
-                <!-- Left Profile Block -->
-                <div class="profile-left">
-                    <div class="profile-card">
-                        <div class="profile-header">
-                            <img src="https://avatars.cloudflare.steamstatic.com/2d886481e3244603968c830e15a7b81a1b0d07a1_full.jpg" alt="User Avatar" class="profile-avatar">
-                            <h2 class="profile-username">ManoKiku</h2>
-                            <span class="profile-steamid">SteamID: 76561198123456789</span>
-                        </div>
-                        <div class="profile-stats">
-                            <div class="stat-item">
-                                <span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
-                                <span class="stat-value">142</span>
+                @if(isLoadingStats)
+                {
+                    <p><em>Stats is loading</em></p>
+                }
+                else if (stats is null)
+                {
+                    <p><em>No stats available.</em></p>
+                }
+                else
+                {
+                    <div class="profile-left">
+                        <div class="profile-card">
+                            <div class="profile-header">
+                                <img src="https://avatars.cloudflare.steamstatic.com/2d886481e3244603968c830e15a7b81a1b0d07a1_full.jpg" alt="User Avatar" class="profile-avatar">
+                                <h2 class="profile-username">ManoKiku</h2>
+                                <span class="profile-steamid">SteamID: 76561198123456789</span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-                                <span class="stat-value">3 748</span>
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
+                                    <span class="stat-value">@stats.totalGames</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
+                                    <span class="stat-value">@stats.totalAchievements</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
+                                    <span class="stat-value">@((int)(stats.completionRate * 100))%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
+                                    <span class="stat-value">@stats.hoursPlayed hrs</span>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
-                                <span class="stat-value">68%</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
-                                <span class="stat-value">2,842 hrs</span>
-                            </div>
-                        </div>
-                        <div class="profile-badges">
-                            <h3><i class="fas fa-award"></i> Recent Badges</h3>
-                            <div class="badges-grid">
-                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/df3ad0f25ca26c549030f922214c9da1c0948070.jpg" alt="Badge 1" class="badge-icon">
-                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 2" class="badge-icon">
-                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/3c9e3748ec8cd6b9a1503b4d518fdaa5cc930360.jpg" alt="Badge 3" class="badge-icon">
-                                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 4" class="badge-icon">
+                            <div class="profile-badges">
+                                <h3><i class="fas fa-award"></i> Recent Badges</h3>
+                                <div class="badges-grid">
+                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/df3ad0f25ca26c549030f922214c9da1c0948070.jpg" alt="Badge 1" class="badge-icon">
+                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 2" class="badge-icon">
+                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/3c9e3748ec8cd6b9a1503b4d518fdaa5cc930360.jpg" alt="Badge 3" class="badge-icon">
+                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 4" class="badge-icon">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                }
 
-                <!-- Center Games Block -->
+
                 <div class="profile-center">
                     <div class="games-header">
                         <h2><i class="fas fa-gamepad"></i> Your Games</h2>
@@ -58,7 +75,6 @@
                     </div>
                         
                     <div class="user-games-grid">
-                        <!-- Game 1 -->
                         <div class="user-game-card">
                             <img src="game1.jpg" alt="Game Banner" class="game-banner">
                             <div class="game-overlay">
@@ -71,7 +87,6 @@
                             </div>
                         </div>
                             
-                        <!-- Game 2 -->
                         <div class="user-game-card">
                             <img src="game2.jpg" alt="Game Banner" class="game-banner">
                             <div class="game-overlay">
@@ -83,8 +98,7 @@
                                 <div class="game-playtime">98 hrs</div>
                             </div>
                         </div>
-                            
-                        <!-- Game 3-5 would go here -->
+                           
                     </div>
                         
                     <div class="pagination">
@@ -96,8 +110,6 @@
                         <button class="page-next"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
-
-                <!-- Right Analytics Block -->
                 <div class="profile-right">
                     <div class="analytics-card">
                         <h2><i class="fas fa-chart-pie"></i> Achievement Distribution</h2>
@@ -177,4 +189,26 @@
 
 @code {
     public Sesion sesion { get; set; }
+
+    private string userId;
+    private UserStats? stats;
+    private bool isLoadingStats = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParams = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParams.TryGetValue("id", out var idValue))
+        {
+            userId = idValue.FirstOrDefault();
+        }
+        
+        Task<UserStats?>? statsTask = null;
+
+        stats = await BadluckAchievementsService.LoadUserStats(ulong.Parse(userId));
+        isLoadingStats = false;
+    }
+
+
 }

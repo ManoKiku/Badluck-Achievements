@@ -49,15 +49,15 @@ h2::after {
     border-left: 3px solid #ff9800;
 }
 
-    .news-card:hover {
-        transform: translateY(-5px);
-    }
+.news-card:hover {
+    transform: translateY(-5px);
+}
 
 .game-stats {
     font-size: 13px;
     position: absolute;
     bottom: -5px;
-    right: 5px;
+    right: 10px;
 }
 
 .game-card {
@@ -69,13 +69,13 @@ h2::after {
     transition: transform 0.3s;
 }
 
-    .game-card img {
-        border-radius: 10px;
-    }
+.game-card img {
+    border-radius: 10px;
+}
 
-    .game-card:hover {
-        transform: scale(1.03);
-    }
+.game-card:hover {
+    transform: scale(1.03);
+}
 
 .game-overlay {
     position: absolute;
@@ -90,9 +90,9 @@ h2::after {
 .game-title {
     position: absolute;
     top: 0;
-    right: 5px;
+    right: 10px;
     left: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: bold;
     text-align: end;
 }
@@ -113,9 +113,9 @@ h2::after {
     border-left: 3px solid #4CAF50;
 }
 
-    .achievement-card:hover {
-        transform: translateY(-5px);
-    }
+.achievement-card:hover {
+    transform: translateY(-5px);
+}
 
 .achievement-icon {
     width: 50px;
@@ -157,16 +157,16 @@ footer {
     margin: 15px 0;
 }
 
-    .footer-links a {
-        color: white;
-        text-decoration: none;
-        font-size: 14px;
-        transition: color 0.3s;
-    }
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
 
-        .footer-links a:hover {
-            color: #ff9800;
-        }
+.footer-links a:hover {
+    color: #ff9800;
+}
 
 .social-icons {
     display: flex;
@@ -175,43 +175,17 @@ footer {
     margin-top: 15px;
 }
 
-    .social-icons a {
-        color: white;
-        font-size: 1.5rem;
-        transition: transform 0.3s;
-    }
+.social-icons a {
+    color: white;
+    font-size: 1.5rem;
+    transition: transform 0.3s;
+}
 
-        .social-icons a:hover {
-            transform: translateY(-5px);
-        }
+.social-icons a:hover {
+    transform: translateY(-5px);
+}
 
 @media (min-width: 992px) {
-    .header {
-        flex-wrap: nowrap;
-        padding: 20px 5%;
-        justify-content: space-between;
-    }
-
-    .logo-container {
-        width: auto;
-        order: 1;
-        justify-content: flex-start;
-    }
-
-    .nav-buttons {
-        width: auto;
-        order: 2;
-        margin: 0;
-        justify-content: center;
-    }
-
-    .profile-container {
-        width: auto;
-        order: 3;
-        margin: 0;
-        justify-content: flex-end;
-    }
-
     .content {
         flex-direction: row;
         flex-wrap: wrap;
@@ -238,9 +212,6 @@ footer {
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
-    .header {
-        justify-content: center;
-    }
 
     .logo-container {
         justify-content: center;
@@ -252,15 +223,6 @@ footer {
 }
 
 @media (max-width: 767px) {
-    body {
-        font-size: 14px;
-    }
-
-    .header {
-        padding: 15px;
-        justify-content: center;
-    }
-
     .logo {
         width: 250px;
     }
@@ -293,19 +255,6 @@ footer {
 }
 
 @media (max-width: 480px) {
-    .header {
-        padding: 12px;
-    }
-
-    .logo {
-        width: 250px;
-    }
-
-    .nav-buttons a {
-        padding: 6px 10px;
-        font-size: 12px;
-    }
-
     .content-block {
         padding: 15px;
     }

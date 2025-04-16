@@ -1,8 +1,11 @@
 ﻿﻿@using Badluck_Achievements.Components.Models
 @using SteamWebAPI2.Interfaces
 @using SteamWebAPI2.Utilities
+@using global::Components.Services_Achievements.Components
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SteamAchievementService SteamAchievementService
+
 
 <CascadingValue Value="@sesion">
     <header class="header">
@@ -94,16 +97,10 @@
 
     private async Task LoadSteamUserInfo(string steamId64)
     {
-        var apiKey = Configuration["ApiKeys:SteamApiKey"];
-        Console.WriteLine(apiKey);
-        var steamInterface = new SteamWebInterfaceFactory(apiKey);
-        var steamUser = steamInterface.CreateSteamWebInterface<SteamUser>(new HttpClient());
-
         Console.WriteLine();
         try
         {
-            var playerSummaryResponse = await steamUser.GetPlayerSummaryAsync(ulong.Parse(steamId64));
-            var playerSummary = playerSummaryResponse.Data;
+            var playerSummary = await SteamAchievementService.GetPlayerSummaries(ulong.Parse(steamId64));
 
 
             sesion.avatarUrl = playerSummary.AvatarFullUrl;

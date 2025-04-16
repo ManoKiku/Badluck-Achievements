@@ -6,8 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+SteamAchievementService steamAchievementService = new SteamAchievementService(builder.Configuration["ApiKeys:SteamApiKey"]!);
+builder.Services.AddSingleton(steamAchievementService).
+    AddSingleton(new BadluckAchievementsService(steamAchievementService, builder.Configuration["ApiKeys:SteamApiKey"]!, builder.Configuration["ApiKeys:NewsApiKey"]!));
 
-builder.Services.AddSingleton(new SteamAchievementService(builder.Configuration["ApiKeys:SteamApiKey"]!));
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "Cookies";

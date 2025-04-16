@@ -2,9 +2,11 @@
 @using Badluck_Achievements.Components.Models
 @using System.Text.RegularExpressions
 @using global::Components.Services_Achievements.Components
+@using System.Text;
 @inject IHttpClientFactory HttpClientFactory
 @inject IConfiguration Configuration
 @inject SteamAchievementService SteamAchievementService
+@inject BadluckAchievementsService BadluckAchievementsService
 
 <PageTitle>Badluck Achievements</PageTitle>
 
@@ -96,26 +98,36 @@
             </section>
         }
 
-
-        <section class="user-stats">
-            <h2><i class="fas fa-chart-line"></i> Your Stats</h2>
-            <div class="stat-item">
-                <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-                <span class="stat-value">247</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label"><i class="fas fa-gamepad"></i> Games Played</span>
-                <span class="stat-value">42</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
-                <span class="stat-value">68%</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label"><i class="fas fa-ranking-star"></i> Global Rank</span>
-                <span class="stat-value">#1,245</span>
-            </div>
-        </section>
+        @if(isLoadingStats)
+        {
+            <p><em>Loading stats...</em></p>
+        }
+        else if (stats is null)
+        {
+            <p><em>No stats available.</em></p>
+        }
+        else
+        {
+            <section class="user-stats">
+                <h2><i class="fas fa-chart-line"></i> Your Stats</h2>
+                <div class="stat-item">
+                    <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
+                    <span class="stat-value">@stats.totalAchievements</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label"><i class="fas fa-gamepad"></i> Total games</span>
+                    <span class="stat-value">@stats.totalGames</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
+                    <span class="stat-value">@((int)(@stats.completionRate * 100))%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label"><i class="fas fa-ranking-star"></i> Global Rank</span>
+                    <span class="stat-value">#1</span>
+                </div>
+            </section>
+        }
     </div>
 </article>
 
@@ -123,153 +135,58 @@
     private List<SteamGame>? popularGames;
     private List<GamingNews>? news;
     private List<SteamAchievement>? achievements;
+    private UserStats? stats;
 
     private bool isLoadingNews = true;
     private bool isLoadingGames = true;
     private bool isLoadingAchievements = true;
+    private bool isLoadingStats = true;
 
     [CascadingParameter]
-    public Sesion sesion { get; set; }
+    public Sesion? sesion { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            await Task.WhenAll(
-                LoadPopularGamesAsync(),
-                LoadGamingNewsAsync(),
-                LoadLatestAchievements()
-            );
+            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync();
+            var newsTask = BadluckAchievementsService.LoadGamingNewsAsync();
+            Task<List<SteamAchievement>?>? achievementsTask = null;
+            Task<UserStats?>? statsTask = null;
+
+            if (sesion.isAuthenticated)
+            {
+                var steamId = ulong.Parse(sesion.steamId);
+                achievementsTask = BadluckAchievementsService.LoadLatestAchievements(steamId);
+                statsTask = BadluckAchievementsService.LoadUserStats(steamId);
+            }
+
+            var tasks = new List<Task> { popularGamesTask, newsTask };
+            if (sesion.isAuthenticated)
+            {
+                tasks.Add(achievementsTask);
+                tasks.Add(statsTask);
+            }
+
+            await Task.WhenAll(tasks);
+
+            popularGames = await popularGamesTask;
+            news = await newsTask;
+
+            if (sesion.isAuthenticated)
+            {
+                achievements = await achievementsTask;
+                stats = await statsTask;
+            }
+
+            isLoadingNews = false;
+            isLoadingGames = false;
+            isLoadingStats = false;
+            isLoadingAchievements = false;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading data: {ex.Message}");
-        }
-    }
-
-    private async Task LoadPopularGamesAsync()
-    {
-        isLoadingGames = true;
-        try
-        {
-            var httpClient = HttpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync("https://store.steampowered.com/search/results?category1=998&json=1");
-
-            if (response.IsSuccessStatusCode)
-            {
-                popularGames = new List<SteamGame>();
-
-                var json = await response.Content.ReadAsStringAsync();
-                var parsed = JObject.Parse(json);
-
-                await Parallel.ForEachAsync(parsed["items"]!.Take(8), async (item, ct) =>
-                {
-                    try
-                    {
-                        Match match = Regex.Match(item.Value<string>("logo")!, @"/apps/(\d+)");
-                        string? appID = string.Empty;
-                        if (match.Success)
-                        {
-                            appID = match.Groups[1].Value;
-                        }
-
-                        var httpClient = HttpClientFactory.CreateClient();
-                        var url = $"http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={appID}&format=json";
-
-                        var response = await httpClient.GetAsync(url);
-
-                        uint achievementsCount = 0;
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var json = await response.Content.ReadAsStringAsync();
-                            var parsed = JObject.Parse(json);
-                            achievementsCount = (uint)parsed["achievementpercentages"]["achievements"].Count();
-                        }
-
-                        uint playersCount = await SteamAchievementService.
-                        GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID));
-
-                        popularGames.Add(new SteamGame(
-                            item.Value<string>("name") ?? "Unknown",
-                            item.Value<string>("logo") ?? "default.png",
-                            achievementsCount,
-                            playersCount));
-                        }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-
-
-                });
-            }
-        }
-        finally
-        {
-            isLoadingGames = false;
-        }
-    }
-
-
-    private async Task LoadGamingNewsAsync()
-    {
-        isLoadingNews = true;
-        try
-        {
-            var httpClient = HttpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-
-            var apiKey = Configuration["ApiKeys:NewsApiKey"];
-            var url = $"https://newsapi.org/v2/everything?q=gaming&apiKey={apiKey}&pageSize=2";
-
-
-            var response = await httpClient.GetAsync(url);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var parsed = JObject.Parse(json);
-
-                news = parsed["articles"]?
-                    .Select(article => new GamingNews(
-                        article.Value<string>("title") ?? "No title",
-                        article.Value<string>("description") ?? "No description",
-                        article.Value<string>("url") ?? "#",
-                        DateTime.ParseExact(article.Value<string>("publishedAt")!, "MM/dd/yyyy HH:mm:ss", null)
-                )).Reverse().ToList();
-            }
-        }
-        finally
-        {
-            isLoadingNews = false;
-        }
-    }
-
-    private async Task LoadLatestAchievements()
-    {
-        isLoadingAchievements = true;
-        try
-        {
-            if(sesion.isAuthenticated)
-            {
-                Random random = new Random();
-                achievements = new List<SteamAchievement>();
-                var games = await SteamAchievementService.GetPlayerGames(ulong.Parse(sesion.steamId));
-                for (int i = 0; achievements.Where(x => x.isAchieved).Count() == 0 && i < 10; ++i)
-                {
-                    achievements = await SteamAchievementService.
-                            GetGameAchievementsAsync(ulong.Parse(sesion.steamId),
-                            games[random.Next(0, games.Count() - 1)].appID);
-                }
-
-
-                achievements = achievements.OrderBy(x => x.unlockTime).Skip(Math.Max(0, achievements.Count() - 5)).Reverse().ToList();
-            }
-        }
-        finally
-        {
-            isLoadingAchievements = false;
         }
     }
 
