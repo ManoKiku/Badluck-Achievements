@@ -1,4 +1,5 @@
 using Badluck_Achievements.Components;
+using Badluck_Achievements.Components.Pages;
 using Components.Services_Achievements.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
 SteamAchievementService steamAchievementService = new SteamAchievementService(builder.Configuration["ApiKeys:SteamApiKey"]!);
 builder.Services.AddSingleton(steamAchievementService).
     AddSingleton(new BadluckAchievementsService(steamAchievementService, builder.Configuration["ApiKeys:SteamApiKey"]!, builder.Configuration["ApiKeys:NewsApiKey"]!));
@@ -26,6 +28,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 var app = builder.Build();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 if (app.Environment.IsDevelopment())
 {
@@ -49,8 +54,5 @@ app.UseAntiforgery();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToFile("/Home.razor");
-
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
 
 app.Run();

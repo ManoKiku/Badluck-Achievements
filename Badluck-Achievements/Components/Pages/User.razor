@@ -1,214 +1,256 @@
 ﻿@page "/User"
 @inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+@inject BadluckAchievementsService BadluckAchievementsService
+@inject SteamAchievementService SteamAchievementService
+@rendermode RenderMode.InteractiveWebAssembly
 
 @using Badluck_Achievements.Components.Models
 @using Microsoft.AspNetCore.WebUtilities
+@using Steam.Models.SteamCommunity
 @using global::Components.Services_Achievements.Components
-@inject BadluckAchievementsService BadluckAchievementsService
-@inject SteamAchievementService SteamAchievementService
 
+<PageTitle>Badluck Achievements - User profile</PageTitle>
 
 <div class="page">
-    <main>
-        <article class="content px-4">
-            <div class="profile-layout">
-                @if(isLoadingStats)
-                {
-                    <p><em>Stats is loading</em></p>
-                }
-                else if (stats is null)
-                {
-                    <p><em>No stats available.</em></p>
-                }
-                else
-                {
-                    <div class="profile-left">
-                        <div class="profile-card">
-                            <div class="profile-header">
-                                <img src="https://avatars.cloudflare.steamstatic.com/2d886481e3244603968c830e15a7b81a1b0d07a1_full.jpg" alt="User Avatar" class="profile-avatar">
-                                <h2 class="profile-username">ManoKiku</h2>
-                                <span class="profile-steamid">SteamID: 76561198123456789</span>
-                            </div>
-                            <div class="profile-stats">
-                                <div class="stat-item">
-                                    <span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
-                                    <span class="stat-value">@stats.totalGames</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-                                    <span class="stat-value">@stats.totalAchievements</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
-                                    <span class="stat-value">@((int)(stats.completionRate * 100))%</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
-                                    <span class="stat-value">@stats.hoursPlayed hrs</span>
-                                </div>
-                            </div>
-                            <div class="profile-badges">
-                                <h3><i class="fas fa-award"></i> Recent Badges</h3>
-                                <div class="badges-grid">
-                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/df3ad0f25ca26c549030f922214c9da1c0948070.jpg" alt="Badge 1" class="badge-icon">
-                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 2" class="badge-icon">
-                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/3c9e3748ec8cd6b9a1503b4d518fdaa5cc930360.jpg" alt="Badge 3" class="badge-icon">
-                                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 4" class="badge-icon">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
+	<main>
+		<article class="content px-4">
+			<div class="profile-layout">
+				<div class="profile-left">
+					<div class="profile-card">
+						@if (isLoadingModel)
+						{
+							<p><em>Profile is loading</em></p>
+						}
+						else if (model is null)
+						{
+							<p><em>No header available.</em></p>
+						}
+						else
+						{
+							<div class="profile-header">
+								<img src="@model.AvatarFullUrl" alt="User Avatar" class="profile-avatar">
+								<h2 class="profile-username">@model.Nickname</h2>
+								<span class="profile-steamid">SteamID: @model.SteamId</span>
+							</div>
+						}
 
+						@if(isLoadingStats)
+						{
+							<p><em>Stats is loading</em></p>
+						}
+						else if (stats is null)
+						{
+							<p><em>No stats available.</em></p>
+						}
+						else
+						{
+							<div class="profile-stats">
+								<div class="stat-item">
+									<span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
+									<span class="stat-value">@stats.totalGames</span>
+								</div>
+								<div class="stat-item">
+									<span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
+									<span class="stat-value">@stats.totalAchievements</span>
+								</div>
+								<div class="stat-item">
+									<span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
+									<span class="stat-value">@((int)(stats.CalculateCompetionRate() * 100))%</span>
+								</div>
+								<div class="stat-item">
+									<span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
+									<span class="stat-value">@((int)stats.hoursPlayed) hrs</span>
+								</div>
+							</div>
+						}
+						<div class="profile-badges">
+							<h3><i class="fas fa-award"></i> Recent Badges</h3>
+							<div class="badges-grid">
+								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/df3ad0f25ca26c549030f922214c9da1c0948070.jpg" alt="Badge 1" class="badge-icon">
+								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 2" class="badge-icon">
+								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/3c9e3748ec8cd6b9a1503b4d518fdaa5cc930360.jpg" alt="Badge 3" class="badge-icon">
+								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 4" class="badge-icon">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="profile-center">
+					<div class="games-header">
+						<h2><i class="fas fa-gamepad"></i> Your Games</h2>
+						<div class="games-filter">
+							<select class="filter-select>
+								<option value="All Games">All Games</option>
+								<option value="100% Completed">100% Completed</option>
+								<option value="In Progress">In Progress</option>
+								<option value="Not Played">Not Played</option>
+							</select>
+						</div>
+					</div>
 
-                <div class="profile-center">
-                    <div class="games-header">
-                        <h2><i class="fas fa-gamepad"></i> Your Games</h2>
-                        <div class="games-filter">
-                            <select class="filter-select">
-                                <option>All Games</option>
-                                <option>100% Completed</option>
-                                <option>In Progress</option>
-                                <option>Not Played</option>
-                            </select>
-                        </div>
-                    </div>
-                        
-                    <div class="user-games-grid">
-                        <div class="user-game-card">
-                            <img src="game1.jpg" alt="Game Banner" class="game-banner">
-                            <div class="game-overlay">
-                                <div class="game-title">The Witcher 3</div>
-                                <div class="game-progress">
-                                    <div class="progress-bar" style="width: 87%"></div>
-                                    <span>87% (53/60)</span>
-                                </div>
-                                <div class="game-playtime">142 hrs</div>
-                            </div>
-                        </div>
-                            
-                        <div class="user-game-card">
-                            <img src="game2.jpg" alt="Game Banner" class="game-banner">
-                            <div class="game-overlay">
-                                <div class="game-title">Elden Ring</div>
-                                <div class="game-progress">
-                                    <div class="progress-bar" style="width: 100%"></div>
-                                    <span>100% (42/42)</span>
-                                </div>
-                                <div class="game-playtime">98 hrs</div>
-                            </div>
-                        </div>
-                           
-                    </div>
-                        
-                    <div class="pagination">
-                        <button class="page-btn active">1</button>
-                        <button class="page-btn">2</button>
-                        <button class="page-btn">3</button>
-                        <span class="page-dots">...</span>
-                        <button class="page-btn">12</button>
-                        <button class="page-next"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                </div>
-                <div class="profile-right">
-                    <div class="analytics-card">
-                        <h2><i class="fas fa-chart-pie"></i> Achievement Distribution</h2>
-                        <div class="chart-container">
-                            <canvas id="achievementChart"></canvas>
-                        </div>
-                        <div class="chart-legend">
-                            <div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
-                            <div class="legend-item"><span class="legend-color" style="background: #FF9800;"></span> In Progress</div>
-                            <div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Not Started</div>
-                        </div>
-                    </div>
-                        
-                    <div class="recent-activity">
-                        <h2><i class="fas fa-history"></i> Recent Activity</h2>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-medal gold"></i></div>
-                            <div class="activity-details">
-                                <div class="activity-text">Unlocked "The Wild Card" in Cyberpunk 2077</div>
-                                <div class="activity-time">2 hours ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-gamepad"></i></div>
-                            <div class="activity-details">
-                                <div class="activity-text">Started playing Stardew Valley</div>
-                                <div class="activity-time">1 day ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-medal silver"></i></div>
-                            <div class="activity-details">
-                                <div class="activity-text">Unlocked "Legendary" in Halo Infinite</div>
-                                <div class="activity-time">3 days ago</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </article>
-    </main>
+					<div class="user-games-grid">
+						@if(isGamesLoading)
+						{
+							<p><em>Games is loading</em></p>
+						}
+						else if (gamesToShow is null || !gamesToShow.Any())
+						{
+							<p><em>No games data</em></p>
+						}
+						else
+						{
+							@foreach (var i in gamesToShow)
+							{
+								<div class="user-game-card">
+									<img src="@i.img" alt="Game Banner" class="game-banner">
+									<div class="game-overlay">
+										<div class="game-title">@i.name</div>
+										@if (i.achievementsCount != 0)
+										{
+											<div class="game-progress">
+												<div class="progress-bar" style="width: @((int)(i.completedAchievements / (double)i.achievementsCount * 100))%"></div>
+												<span> @((int)(i.completedAchievements / (double)i.achievementsCount * 100))% (@i.completedAchievements/@i.achievementsCount)</span>
+											</div>
+										}
+										<div class="game-playtime">@((int)i.playtimeForever) hrs</div>
+									</div>
+								</div>
+							}
+						}
+					</div>
+				</div> 
+
+				<div class="profile-right">
+					<div class="analytics-card">
+						<h2><i class="fas fa-chart-pie"></i> Achievement Distribution</h2>
+						<div class="chart-container">
+							<canvas id="achievementChart"></canvas>
+						</div>
+						<div class="chart-legend">
+							<div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
+							<div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Uncompleted</div>
+						</div>
+					</div>
+
+					<div class="recent-activity">
+						<h2><i class="fas fa-history"></i> Recent Activity</h2>
+						<div class="activity-item">
+							<div class="activity-icon"><i class="fas fa-medal gold"></i></div>
+							<div class="activity-details">
+								<div class="activity-text">Unlocked "The Wild Card" in Cyberpunk 2077</div>
+								<div class="activity-time">2 hours ago</div>
+							</div>
+						</div>
+						<div class="activity-item">
+							<div class="activity-icon"><i class="fas fa-gamepad"></i></div>
+							<div class="activity-details">
+								<div class="activity-text">Started playing Stardew Valley</div>
+								<div class="activity-time">1 day ago</div>
+							</div>
+						</div>
+						<div class="activity-item">
+							<div class="activity-icon"><i class="fas fa-medal silver"></i></div>
+							<div class="activity-details">
+								<div class="activity-text">Unlocked "Legendary" in Halo Infinite</div>
+								<div class="activity-time">3 days ago</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</article>
+	</main>
 </div>
 
-<!-- Chart.js for analytics -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Sample chart initialization
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('achievementChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Completed', 'In Progress', 'Not Started'],
-                datasets: [{
-                    data: [45, 30, 25],
-                    backgroundColor: [
-                        '#4CAF50',
-                        '#FF9800',
-                        '#F44336'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    });
-</script>
+
+@if (isLoadingStats)
+{
+	<p><em>Diagram is loading</em></p>
+}
+else if (stats is null)
+{
+	<p><em>No stats available.</em></p>
+}
+else
+{
+	<script>
+		document.addEventListener('DOMContentLoaded', function() 
+		{
+		const ctx = document.getElementById('achievementChart').getContext('2d');
+		const chart = new Chart(ctx, 
+		{
+		type: 'doughnut',
+		data: {
+		labels: ['Completed', 'Uncompleted'],
+		datasets: 
+		[
+		{
+		data: [@stats.completedAchievements, @(stats.totalAchievements - stats.completedAchievements)],
+		backgroundColor: [
+		'#4CAF50',
+		'#F44336'
+		],
+		borderWidth: 0
+		}
+		]
+		},
+		options: {
+		responsive: true,
+		maintainAspectRatio: false,
+		cutout: '70%',
+		plugins: {
+		legend: {
+		display: false
+		}
+		}
+		}
+		});
+		});
+	</script>
+}
+
 
 @code {
-    public Sesion sesion { get; set; }
+	public Sesion sesion { get; set; }
+	private string userId;
 
-    private string userId;
-    private UserStats? stats;
-    private bool isLoadingStats = true;
+	private UserStats? stats;
+	private PlayerSummaryModel model;
+	private List<SteamPlayerGame>? playerGames;
+	private List<SteamPlayerGame>? gamesToShow;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        var queryParams = QueryHelpers.ParseQuery(uri.Query);
+	private bool isLoadingStats = true;
+	private bool isLoadingModel = true;
+	private bool isGamesLoading = true;
 
-        if (queryParams.TryGetValue("id", out var idValue))
-        {
-            userId = idValue.FirstOrDefault();
-        }
-        
-        Task<UserStats?>? statsTask = null;
+	protected override async Task OnInitializedAsync()
+	{
+		HttpClient httpClient = HttpClientFactory.CreateClient();
+		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+		var queryParams = QueryHelpers.ParseQuery(uri.Query);
 
-        stats = await BadluckAchievementsService.LoadUserStats(ulong.Parse(userId));
-        isLoadingStats = false;
-    }
+		if (queryParams.TryGetValue("id", out var idValue))
+		{
+			userId = idValue.FirstOrDefault();
+		}
 
+		ulong steamId = ulong.Parse(userId);
 
+		stats = await BadluckAchievementsService.LoadUserStats(httpClient, steamId);
+		model = await SteamAchievementService.GetPlayerSummaries(steamId);
+		playerGames = await SteamAchievementService.GetPlayerGames(steamId);
+
+		if(playerGames != null)
+		{
+			playerGames = playerGames.OrderByDescending(x => x.achievementsCount)
+						.OrderByDescending(x => x.completedAchievements).ToList();
+		}
+
+		gamesToShow = playerGames;
+
+		isLoadingStats = false;
+		isLoadingModel = false;
+		isGamesLoading = false;
+	}
 }

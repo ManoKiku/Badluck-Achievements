@@ -1,12 +1,13 @@
 ﻿namespace Badluck_Achievements.Components.Models
 {
-    public class SteamPlayerGame
+    public class SteamPlayerGame : SteamGame
     {
-        public uint appID { get; set; }
-        public string name { get; set; }
-        public int playtimeForever { get; set; } // in minutes
-        public int? playtime2Weeks { get; set; } // in minutes
-        public string iconUrl { get; set; }
-        public string logoUrl { get; set; }
+        public SteamPlayerGame() { }
+
+        public uint appID { get; set; } = 0;
+        public double playtimeForever { get; set; } = 0; // in hours
+        public double? playtime2Weeks { get; set; } = 0; // in hours
+        public string iconUrl { get; set; } = string.Empty;
+        public uint completedAchievements { get; set; } = 0;
     }
 }

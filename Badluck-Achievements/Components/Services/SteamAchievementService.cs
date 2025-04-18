@@ -10,6 +10,8 @@ using SteamWebAPI2.Utilities;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Text;
 
 namespace Components.Services_Achievements.Components
 {
@@ -56,25 +58,43 @@ namespace Components.Services_Achievements.Components
             return response.Data.First();   
         }
 
-        public async Task<List<SteamPlayerGame>> GetPlayerGames(ulong steamId)
+        public async Task<List<SteamPlayerGame>?> GetPlayerGames(ulong steamId)
         {
+            HttpClient httpClient = new HttpClient();
             var playerInterface = _steamFactory.CreateSteamWebInterface<PlayerService>();
+            var responseGames = await playerInterface.GetOwnedGamesAsync(steamId, includeAppInfo: true, includeFreeGames: true);
+            var games = responseGames.Data.OwnedGames;
 
-            var response = await playerInterface.GetOwnedGamesAsync(steamId, includeAppInfo: true, includeFreeGames: true);
+            StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
+            for (int i = 0; i < games.Count(); ++i)
+            {
+                builder.Append($"&appids[{i}]={games.ElementAt(i).AppId}");
+            }
 
-            var games = response.Data.OwnedGames
-                .Select(g => new SteamPlayerGame
-                {
-                    appID = g.AppId,
-                    name = g.Name,
-                    playtimeForever = g.PlaytimeForever.Minutes,
-                    playtime2Weeks = g.PlaytimeLastTwoWeeks?.Minutes,
-                    iconUrl = g.ImgIconUrl,
-                    logoUrl = g.ImgLogoUrl
-                })
-                .ToList();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-            return games;
+            var response = await httpClient.GetAsync(builder.ToString());
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            var parsed = JObject.Parse(json);
+            return games.Select((g, i) => new SteamPlayerGame
+            {
+                appID = g.AppId,
+                name = g.Name,
+                playtimeForever = g.PlaytimeForever.TotalHours,
+                playtime2Weeks = g.PlaytimeLastTwoWeeks?.TotalHours,
+                iconUrl = g.ImgIconUrl,
+                img = $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{g.AppId}/header.jpg",
+                achievementsCount = (uint)parsed["response"]!["games"]![i].Value<int>("total_achievements"),
+                completedAchievements = (parsed["response"]!["games"]![i] is JObject obj && obj.ContainsKey("achievements")) ? (uint)obj["achievements"]!.Count() : 0
+            }).ToList();
         }
 
         public async Task<List<SteamAchievement>> GetAllPlayerAchievements(ulong steamId)

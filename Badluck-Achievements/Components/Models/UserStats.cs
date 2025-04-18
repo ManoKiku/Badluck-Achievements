@@ -3,12 +3,17 @@
     public class UserStats
     {
         // Count of achievements
-        public long totalAchievements = 0;
+        public long totalAchievements { get; set; } = 0;
         // Count of games
-        public long totalGames = 0;
+        public long totalGames { get; set; } = 0;
         // Percentage of perfect games
-        public double completionRate = 0;
+        public double completedAchievements { get; set; } = 0;
         // Hours playes
-        public double hoursPlayed = 0;
+        public double hoursPlayed { get; set; } = 0;
+
+        public double CalculateCompetionRate()
+        {
+            return completedAchievements / totalAchievements;
+        }
     }
 }

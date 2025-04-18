@@ -15,11 +15,7 @@
     {
         <p><em>Loading news...</em></p>
     }
-    else if (news is null || !news.Any())
-    {
-        <p><em>No news available.</em></p>
-    }
-    else
+    else if (news is not null && news.Any())
     {
         <section class="game-news">
             <h2><i class="fas fa-newspaper"></i> Game News</h2>
@@ -40,11 +36,7 @@
     {
         <p><em>Loading games...</em></p>
     }
-    else if (popularGames is null || !popularGames.Any())
-    {
-        <p><em>No games available.</em></p>
-    }
-    else
+    else if (popularGames is not null && popularGames.Any())
     {
         <section class="popular-games">
             <h2><i class="fas fa-fire"></i> Popular Games</h2>
@@ -57,7 +49,7 @@
                             <div class="game-title"> @item.name</div>
                             <div class="game-stats">
                                 <span><i class="fas fa-users">  @FormatNumberToK(@item.playersCount)</i></span>
-                                <span><i class="fas fa-medal">@item.achievmentsCount</i></span>
+                                <span><i class="fas fa-medal">@item.achievementsCount</i></span>
                             </div>
                         </div>
                     </div>
@@ -71,11 +63,7 @@
         {
             <p><em>Loading achievments...</em></p>
         }
-        else if (achievements is null || !achievements.Any())
-        {
-            <p><em>No achievments available.</em></p>
-        }
-        else
+        else if (achievements is not null && achievements.Any())
         {
             <section class="latest-achievements">
                 <h2><i class="fas fa-trophy"></i> Random game achievements</h2>
@@ -102,11 +90,7 @@
         {
             <p><em>Loading stats...</em></p>
         }
-        else if (stats is null)
-        {
-            <p><em>No stats available.</em></p>
-        }
-        else
+        else if (stats is not null)
         {
             <section class="user-stats">
                 <h2><i class="fas fa-chart-line"></i> Your Stats</h2>
@@ -120,7 +104,7 @@
                 </div>
                 <div class="stat-item">
                     <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
-                    <span class="stat-value">@((int)(@stats.completionRate * 100))%</span>
+                    <span class="stat-value">@((int)(@stats.CalculateCompetionRate() * 100))%</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label"><i class="fas fa-ranking-star"></i> Global Rank</span>
@@ -149,20 +133,21 @@
     {
         try
         {
-            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync();
-            var newsTask = BadluckAchievementsService.LoadGamingNewsAsync();
+            HttpClient httpClient = HttpClientFactory.CreateClient();
+            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync(httpClient, 16);
+            var newsTask = BadluckAchievementsService.LoadGamingNewsAsync(httpClient);
             Task<List<SteamAchievement>?>? achievementsTask = null;
             Task<UserStats?>? statsTask = null;
 
-            if (sesion.isAuthenticated)
+            if (sesion!.isAuthenticated)
             {
                 var steamId = ulong.Parse(sesion.steamId);
-                achievementsTask = BadluckAchievementsService.LoadLatestAchievements(steamId);
-                statsTask = BadluckAchievementsService.LoadUserStats(steamId);
+                achievementsTask = BadluckAchievementsService.LoadLatestAchievements(httpClient, steamId);
+                statsTask = BadluckAchievementsService.LoadUserStats(httpClient, steamId);
             }
 
             var tasks = new List<Task> { popularGamesTask, newsTask };
-            if (sesion.isAuthenticated)
+            if (sesion!.isAuthenticated)
             {
                 tasks.Add(achievementsTask);
                 tasks.Add(statsTask);
@@ -175,6 +160,8 @@
 
             if (sesion.isAuthenticated)
             {
+                Console.WriteLine("Lol!");
+
                 achievements = await achievementsTask;
                 stats = await statsTask;
             }

@@ -1,4 +1,22 @@
-﻿.profile-layout {
+﻿::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.profile-layout {
     display: grid;
     grid-template-columns: 300px 1fr 300px;
     gap: 20px;
@@ -7,7 +25,7 @@
 }
 
 .profile-card {
-    background: rgba(30, 30, 30, 0.8);
+    background: #2a2a2a;
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 25px;
@@ -66,11 +84,11 @@
     margin-top: 25px;
 }
 
-    .profile-badges h3 {
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-        color: white;
-    }
+.profile-badges h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: white;
+}
 
 .badges-grid {
     display: grid;
@@ -84,9 +102,9 @@
     transition: transform 0.3s;
 }
 
-    .badge-icon:hover {
-        transform: scale(1.05);
-    }
+.badge-icon:hover {
+    transform: scale(1.05);
+}
 
 .games-header {
     display: flex;
@@ -95,9 +113,9 @@
     margin-bottom: 20px;
 }
 
-    .games-header h2 {
-        margin: 0;
-    }
+.games-header h2 {
+    margin: 0;
+}
 
 .filter-select {
     background: rgba(40, 40, 40, 0.8);
@@ -108,6 +126,9 @@
 }
 
 .user-games-grid {
+    overflow-x: hidden;
+    overflow-y: inherit;
+    height: 750px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
@@ -122,9 +143,9 @@
     transition: transform 0.3s;
 }
 
-    .user-game-card:hover {
-        transform: scale(1.03);
-    }
+.user-game-card:hover {
+    transform: scale(1.03);
+}
 
 .game-banner {
     width: 100%;
@@ -185,14 +206,14 @@
     transition: all 0.3s;
 }
 
-    .page-btn:hover, .page-next:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
+.page-btn:hover, .page-next:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
 
-    .page-btn.active {
-        background: linear-gradient(90deg, #ff8a00, #e52e71);
-        font-weight: bold;
-    }
+.page-btn.active {
+    background: linear-gradient(90deg, #ff8a00, #e52e71);
+    font-weight: bold;
+}
 
 .page-dots {
     display: flex;
@@ -201,7 +222,7 @@
 }
 
 .analytics-card {
-    background: rgba(30, 30, 30, 0.8);
+    background: #2a2a2a;
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 25px;
@@ -237,7 +258,7 @@
 }
 
 .recent-activity {
-    background: rgba(30, 30, 30, 0.8);
+    background: #2a2a2a;
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 25px;
@@ -256,13 +277,13 @@
     color: #FF9800;
 }
 
-    .activity-icon.gold {
-        color: gold;
-    }
+.activity-icon.gold {
+    color: gold;
+}
 
-    .activity-icon.silver {
-        color: silver;
-    }
+.activity-icon.silver {
+    color: silver;
+}
 
 .activity-details {
     flex: 1;
@@ -292,6 +313,12 @@
 }
 
 @media (max-width: 768px) {
+    .badges-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
     .profile-layout {
         grid-template-columns: 1fr;
     }

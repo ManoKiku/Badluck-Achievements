@@ -41,12 +41,12 @@ h2::after {
 }
 
 .news-card {
-    background: rgba(40, 40, 40, 0.6);
+    background: #2a2a2a;
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
     transition: transform 0.3s;
-    border-left: 3px solid #ff9800;
+    border-left: 4px solid #70a1ff;
 }
 
 .news-card:hover {
@@ -56,11 +56,12 @@ h2::after {
 .game-stats {
     font-size: 13px;
     position: absolute;
-    bottom: -5px;
+    bottom: -1px;
     right: 10px;
 }
 
 .game-card {
+    background: #2a2a2a;
     height: 45px;
     margin-bottom: 30px;
     border-radius: 10px;
@@ -84,7 +85,7 @@ h2::after {
     top: 0px;
     right: 0;
     padding: 15px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
 }
 
 .game-title {
@@ -95,6 +96,7 @@ h2::after {
     font-size: 1rem;
     font-weight: bold;
     text-align: end;
+    color: #bddbfb;
 }
 
 .achievements-section, .stats-section {
@@ -106,11 +108,11 @@ h2::after {
     align-items: center;
     gap: 15px;
     padding: 15px;
-    background: rgba(40, 40, 40, 0.6);
+    background: #2a2a2a;
     border-radius: 10px;
     margin-bottom: 15px;
     transition: transform 0.3s;
-    border-left: 3px solid #4CAF50;
+    border-left: 4px solid #70a1ff;
 }
 
 .achievement-card:hover {

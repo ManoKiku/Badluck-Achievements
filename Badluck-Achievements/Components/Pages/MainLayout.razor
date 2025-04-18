@@ -24,7 +24,7 @@
                 <div class="user-info">
                     @if (sesion.isAuthenticated)
                     {
-                        <a href="/profile" class="profile-link">
+                        <a href="/user?id=@sesion.steamId" class="profile-link">
                             <img src="@sesion.avatarUrl" alt="Profile Picture" class="profile-picture">
                             <span>@sesion.nameIdentifier</span>
                         </a>
@@ -85,8 +85,6 @@
         {
             sesion.steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!;
 
-            // Steam ID will be in the format "https://steamcommunity.com/openid/id/7656119..."
-            // To get a numeric SteamID64:
             if (sesion.steamId != null)
             {
                 sesion.steamId = sesion.steamId.Split('/').Last();

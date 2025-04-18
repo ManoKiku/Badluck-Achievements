@@ -7,16 +7,16 @@
         // Img url
         public string img { get; set; } = string.Empty;
         // Achievments count
-        public uint achievmentsCount { get; set; } = 0;
+        public uint achievementsCount { get; set; } = 0;
         // Current players
         public uint playersCount { get; set; } = 0;
 
-
-        public SteamGame(string name, string img, uint achievmentsCount, uint playersCount)
+        public SteamGame() { }
+        public SteamGame(string name, string img, uint achievementsCount, uint playersCount)
         {
             this.name = name;
             this.img = img;
-            this.achievmentsCount = achievmentsCount;
+            this.achievementsCount = achievementsCount;
             this.playersCount = playersCount;
         }
     }

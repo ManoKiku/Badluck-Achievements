@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Steam.Models.DOTA2;
 
 [Route("api/auth")]
 public class AuthController : Controller

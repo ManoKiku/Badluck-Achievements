@@ -20,11 +20,10 @@ namespace Components.Services_Achievements.Components
             this.newsApiKey = newsApiKey;
         }
 
-        public async Task<List<SteamGame>?> LoadPopularGamesAsync()
+        public async Task<List<SteamGame>?> LoadPopularGamesAsync(HttpClient httpClient, int amount = 8)
         {
             try
             {
-                var httpClient = new HttpClient();
                 var response = await httpClient.GetAsync("https://store.steampowered.com/search/results?category1=998&json=1");
 
                 List<SteamGame> popularGames = new List<SteamGame>();
@@ -37,7 +36,7 @@ namespace Components.Services_Achievements.Components
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = JObject.Parse(json);
 
-                await Parallel.ForEachAsync(parsed["items"]!.Take(8), async (item, ct) =>
+                await Parallel.ForEachAsync(parsed["items"]!.Take(amount), async (item, ct) =>
                 {
                     try
                     {
@@ -83,11 +82,10 @@ namespace Components.Services_Achievements.Components
             }
         }
 
-        public async Task<List<GamingNews>?> LoadGamingNewsAsync()
+        public async Task<List<GamingNews>?> LoadGamingNewsAsync(HttpClient httpClient)
         {
             try
             {
-                var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
@@ -120,7 +118,7 @@ namespace Components.Services_Achievements.Components
             }
         }
 
-        public async Task<List<SteamAchievement>?> LoadLatestAchievements(ulong steamId)
+        public async Task<List<SteamAchievement>?> LoadLatestAchievements(HttpClient httpClient, ulong steamId)
         {
             try
             {
@@ -135,8 +133,6 @@ namespace Components.Services_Achievements.Components
                     builder.Append($"&appids[{i}]={games[i].appID}");
                 }
 
-                Console.WriteLine(builder.ToString());
-                var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
@@ -182,7 +178,7 @@ namespace Components.Services_Achievements.Components
             }
         }
 
-        public async Task<UserStats?> LoadUserStats(ulong steamId)
+        public async Task<UserStats?> LoadUserStats(HttpClient httpClient, ulong steamId)
         {
             try
             {
@@ -196,7 +192,6 @@ namespace Components.Services_Achievements.Components
                     builder.Append($"&appids[{i}]={games[i].appID}");
                 }
 
-                var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
@@ -209,11 +204,6 @@ namespace Components.Services_Achievements.Components
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                if (!json.Contains("\"achievements\""))
-                {
-                    return null;
-                }
-
                 var parsed = JObject.Parse(json);
                 int countCompletedAchievements = 0;
                 int countAchievements = 0;
@@ -224,9 +214,9 @@ namespace Components.Services_Achievements.Components
                 }
 
                 stats.totalGames = games.Count();
-                stats.totalAchievements = countCompletedAchievements;
-                stats.completionRate = countCompletedAchievements / (double)countAchievements;
-                stats.hoursPlayed = games.Sum((x) => x.playtimeForever / 60.0f);
+                stats.totalAchievements = countAchievements;
+                stats.completedAchievements = countCompletedAchievements;
+                stats.hoursPlayed = games.Sum((x) => x.playtimeForever);
 
                 return stats;
             }
