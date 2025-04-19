@@ -7,9 +7,9 @@
         // Img url
         public string img { get; set; } = string.Empty;
         // Achievments count
-        public long achievementsCount { get; set; } = 0;
+        public ulong achievementsCount { get; set; } = 0;
         // Current players
-        public long playersCount { get; set; } = 0;
+        public ulong playersCount { get; set; } = 0;
 
         public SteamGame() { }
         public SteamGame(string name, string img, uint achievementsCount, uint playersCount)

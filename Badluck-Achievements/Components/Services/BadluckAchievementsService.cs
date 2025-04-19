@@ -127,13 +127,20 @@ namespace Components.Services_Achievements.Components
             {
                 Random random = new Random();
                 List<SteamAchievement> achievements = new List<SteamAchievement>();
-                var games = await _steamService.GetPlayerGames(steamId);
+                var stats = await _steamService.LoadUserStats(httpClient, steamId);
 
-                achievements = games.Item2.achievements
-                    .Where(x => x.isAchieved)
-                    .OrderBy(x => x.unlockTime)
+                if(stats.completedAchievements == 0)
+                {
+                    return null;
+                }
+
+                var games = stats.games.Where(x => x.completedAchievements != 0).ToList();
+
+                ulong appId = games[random.Next(0, games.Count() - 1)].appId;
+                achievements = stats.achievements
+                    .Where(x => x.appId == appId)
+                    .OrderBy(x => x.achievePercentage)
                     .Take(5)
-                    .Reverse()
                     .ToList();
 
                 return achievements;

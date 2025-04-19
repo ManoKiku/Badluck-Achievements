@@ -12,5 +12,7 @@
         public DateTime? unlockTime { get; set; } = DateTime.MinValue;
         // Url of achievement icon
         public string iconUrl { get; set; } = string.Empty;
+        // App id
+        public ulong appId { get; set; } = 0;
     }
 }

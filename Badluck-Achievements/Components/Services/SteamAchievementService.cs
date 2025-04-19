@@ -79,14 +79,13 @@ namespace Components.Services_Achievements.Components
 
 				var list = new List<List<OwnedGameModel?>>();
 
-				for (int i = 0; i < games.GameCount; i += 390)
+				for (int i = 0; i < games.GameCount; i += 400)
 				{
 					list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(400, games.GameCount - i)));
 				}
 
 				foreach (var arr in list)
 				{
-					await Task.Delay(100);
 					StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
 
 					for (int i = 0; i < arr.Count(); ++i)
@@ -107,23 +106,31 @@ namespace Components.Services_Achievements.Components
 					foreach (JObject i in parsed["response"]!["games"]!)
 					{
 						stats.totalAchievements += i.Value<int>("total_achievements");
+                        stats.games.Add(new GameInfo
+                        {
+                            appId = i.Value<ulong>("appid"),
+                            totalAhievements = i.Value<ulong>("total_achievements")
+                        });
 
 						if (i is JObject obj && !obj.ContainsKey("achievements"))
 						{
 							continue;
 						}
 
-						stats.completedAchievements += i["achievements"]!.Count();
+                        stats.games.Last().completedAchievements = (ulong)i["achievements"]!.Count(); ;
+
+                        stats.completedAchievements += i["achievements"]!.Count();
 
 						foreach (JObject j in i["achievements"]!)
 						{
-							stats.achievements.Add(new SteamAchievement
-							{
-								name = j.Value<string>("name")!,
-								isAchieved = true,
-								achievePercentage = double.Parse(j.Value<string>("player_percent_unlocked")),
-								iconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{i["appid"]}/{j.Value<string>("icon")}"
-							});
+                            stats.achievements.Add(new SteamAchievement
+                            {
+                                name = j.Value<string>("name")!,
+                                isAchieved = true,
+                                achievePercentage = double.Parse(j.Value<string>("player_percent_unlocked")),
+                                iconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{i["appid"]}/{j.Value<string>("icon")}",
+                                appId = i.Value<uint>("appid")
+                            });
 						}
 					}
 				}
@@ -161,8 +168,8 @@ namespace Components.Services_Achievements.Components
                 playtime2Weeks = g.PlaytimeLastTwoWeeks?.TotalHours,
                 iconUrl = g.ImgIconUrl,
                 img = $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{g.AppId}/header.jpg",
-                achievementsCount = stats.totalAchievements,
-                completedAchievements = (uint)stats.completedAchievements
+                achievementsCount = stats.games.Find(x=> x.appId == g.AppId).totalAhievements,
+                completedAchievements = stats.games.Find(x => x.appId == g.AppId).completedAchievements,
             }).ToList(), stats);
 		}
 

@@ -16,7 +16,7 @@
 
 <div class="page">
 	<main>
-		<article class="content px-4">
+		<article>
 			<div class="profile-layout">
 				<div class="profile-left">
 					<div class="profile-card">
@@ -67,7 +67,7 @@
 							</div>
 						}
 						<div class="profile-badges">
-							<h3><i class="fas fa-award"></i> Recent Badges</h3>
+							<h3><i class="fas fa-award"></i> Rare Badges</h3>
 							<div class="badges-grid">
 								@if(isLoadingStats)
 								{
@@ -135,37 +135,24 @@
 
 				<div class="profile-right">
 					<div class="analytics-card">
-						<h2><i class="fas fa-chart-pie"></i> Achievement Distribution</h2>
+						<h2><i class="fas fa-chart-pie"></i> Analytics</h2>
 						<div class="chart-container">
-							<canvas id="achievementChart"></canvas>
-						</div>
-						<div class="chart-legend">
-							<div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
-							<div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Uncompleted</div>
-						</div>
-					</div>
-
-					<div class="recent-activity">
-						<h2><i class="fas fa-history"></i> Recent Activity</h2>
-						<div class="activity-item">
-							<div class="activity-icon"><i class="fas fa-medal gold"></i></div>
-							<div class="activity-details">
-								<div class="activity-text">Unlocked "The Wild Card" in Cyberpunk 2077</div>
-								<div class="activity-time">2 hours ago</div>
+							<div class="profile-flow-chart">
+								<h4 style="margin:auto;padding-bottom: 10px;">Achievements</h4>
+								<canvas id="achievementChart"></canvas>
+								<div class="chart-legend">
+									<div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
+									<div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Uncompleted</div>
+								</div>
 							</div>
-						</div>
-						<div class="activity-item">
-							<div class="activity-icon"><i class="fas fa-gamepad"></i></div>
-							<div class="activity-details">
-								<div class="activity-text">Started playing Stardew Valley</div>
-								<div class="activity-time">1 day ago</div>
-							</div>
-						</div>
-						<div class="activity-item">
-							<div class="activity-icon"><i class="fas fa-medal silver"></i></div>
-							<div class="activity-details">
-								<div class="activity-text">Unlocked "Legendary" in Halo Infinite</div>
-								<div class="activity-time">3 days ago</div>
+							<div class="profile-flow-chart">
+								<h4 style="margin:auto;padding-bottom: 10px;">Games</h4>
+								<canvas id="gamesChart"></canvas>
+								<div class="chart-legend">
+									<div class="legend-item"><span class="legend-color" style="background: #6E62D6;"></span> Done</div>
+									<div class="legend-item"><span class="legend-color" style="background: #06B6D4;"></span> Ongoing</div>
+									<div class="legend-item"><span class="legend-color" style="background: #656565;"></span> Not Started</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -177,33 +164,50 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-	let achievementChartInstance = null;
+	function renderAchievementsFlowChart(completed, uncompleted) {
+	const canvas = document.getElementById('achievementChart');
+	const ctx = canvas.getContext('2d');
 
-	function changeFlowChart(completed, uncompleted) {
-		const canvas = document.getElementById('achievementChart');
-		const ctx = canvas.getContext('2d');
+	new Chart(ctx, {
+	type: 'doughnut',
+	data: {
+	labels: ['Completed', 'Uncompleted'],
+	datasets: [{
+	data: [completed, uncompleted],
+	backgroundColor: ['#4CAF50', '#F44336'],
+	borderWidth: 0
+	}]
+	},
+	options: {
+	responsive: false,
+	maintainAspectRatio: false,
+	cutout: '70%',
+	plugins: { legend: { display: false } }
+	}
+	});
+	}
 
-		if (achievementChartInstance) {
-			achievementChartInstance.destroy();
-		}
+	function renderGamesFlowChart(completed, inProgress, uncompleted){
+	const canvas = document.getElementById('gamesChart');
+	const ctx = canvas.getContext('2d');
 
-		achievementChartInstance = new Chart(ctx, {
-			type: 'doughnut',
-			data: {
-				labels: ['Completed', 'Uncompleted'],
-				datasets: [{
-					data: [completed, uncompleted],
-					backgroundColor: ['#4CAF50', '#F44336'],
-					borderWidth: 0
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				cutout: '70%',
-				plugins: { legend: { display: false } }
-			}
-		});
+	new Chart(ctx, {
+	type: 'doughnut',
+	data: {
+	labels: ['Done', 'Ongoing', 'Not Started'],
+	datasets: [{
+	data: [completed, inProgress, uncompleted],
+	backgroundColor: ['#6E62D6', '#06B6D4', '#9E9E9E'],
+	borderWidth: 0
+	}]
+	},
+	options: {
+	responsive: false,
+	maintainAspectRatio: false,
+	cutout: '70%',
+	plugins: { legend: { display: false } }
+	}
+	});
 	}
 </script>
 
@@ -258,7 +262,17 @@
 		if (!firstRender && !isRendered && stats is not null)
 		{
 			isRendered = true;
-			await JSRuntime.InvokeVoidAsync("changeFlowChart", stats.completedAchievements, stats.totalAchievements - stats.completedAchievements);
+			await JSRuntime.InvokeVoidAsync("renderAchievementsFlowChart", stats.completedAchievements, stats.totalAchievements - stats.completedAchievements);
+
+			var games = stats.games.Where(x => x.totalAhievements != 0).ToList();
+			int allAchievementsGames = games.Count();
+			int completedGames = games.Count(x => x.completedAchievements == x.totalAhievements);
+			int inProgressGames = games.Count(x => x.completedAchievements != x.totalAhievements && x.completedAchievements != 0);
+
+			await JSRuntime.InvokeVoidAsync("renderGamesFlowChart", completedGames, inProgressGames,
+				allAchievementsGames - completedGames - inProgressGames);
+
+
 		}
 	}
 }
