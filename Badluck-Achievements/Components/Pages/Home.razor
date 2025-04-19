@@ -65,7 +65,7 @@
         else if (achievements is not null && achievements.Any())
         {
             <section class="latest-achievements">
-                <h2><i class="fas fa-trophy"></i> Random game achievements</h2>
+                <h2><i class="fas fa-trophy"></i> Random achievements</h2>
                 @foreach (var item in achievements)
                 {
                     <div class="achievement-card">
@@ -132,7 +132,7 @@
         try
         {
             HttpClient httpClient = HttpClientFactory.CreateClient();
-            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync(httpClient, 16);
+            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync(httpClient, 11);
             var newsTask = BadluckAchievementsService.LoadGamingNewsAsync(httpClient);
             Task<List<SteamAchievement>?>? achievementsTask = null;
             Task<UserStats?>? statsTask = null;

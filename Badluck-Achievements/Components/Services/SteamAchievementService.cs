@@ -84,45 +84,55 @@ namespace Components.Services_Achievements.Components
 					list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(400, games.GameCount - i)));
 				}
 
-				foreach (var arr in list)
-				{
-					StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
+                var urls = list.Select((x) =>
+                {
+                    StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
 
-					for (int i = 0; i < arr.Count(); ++i)
-					{
-						builder.Append($"&appids[{i}]={arr[i].AppId}");
-					}
-					Console.WriteLine(builder.ToString());
-					var response = await httpClient.GetAsync(builder.ToString());
+                    for (int i = 0; i < x.Count(); ++i)
+                    {
+                        builder.Append($"&appids[{i}]={x[i].AppId}");
+                    }
 
-					if (!response.IsSuccessStatusCode)
-					{
-						continue;
-					}
+                    return builder.ToString();
+                }).ToArray();
 
-					var json = await response.Content.ReadAsStringAsync();
+                var requests = urls.Select
+                    (
+                        url => httpClient.GetAsync(url)
+                    ).ToList();
 
-					var parsed = JObject.Parse(json);
-					foreach (JObject i in parsed["response"]!["games"]!)
-					{
-						stats.totalAchievements += i.Value<int>("total_achievements");
+                await Task.WhenAll(requests);
+
+                var responses = requests.Select
+                    (
+                        task => task.Result
+                    );
+
+                foreach (var r in responses)
+                {
+                    var s = await r.Content.ReadAsStringAsync();
+                    var parsed = JObject.Parse(s);
+
+                    foreach (JObject i in parsed["response"]!["games"]!)
+                    {
+                        stats.totalAchievements += i.Value<int>("total_achievements");
                         stats.games.Add(new GameInfo
                         {
                             appId = i.Value<ulong>("appid"),
                             totalAhievements = i.Value<ulong>("total_achievements")
                         });
 
-						if (i is JObject obj && !obj.ContainsKey("achievements"))
-						{
-							continue;
-						}
+                        if (i is JObject obj && !obj.ContainsKey("achievements"))
+                        {
+                            continue;
+                        }
 
                         stats.games.Last().completedAchievements = (ulong)i["achievements"]!.Count(); ;
 
                         stats.completedAchievements += i["achievements"]!.Count();
 
-						foreach (JObject j in i["achievements"]!)
-						{
+                        foreach (JObject j in i["achievements"]!)
+                        {
                             stats.achievements.Add(new SteamAchievement
                             {
                                 name = j.Value<string>("name")!,
@@ -131,9 +141,9 @@ namespace Components.Services_Achievements.Components
                                 iconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{i["appid"]}/{j.Value<string>("icon")}",
                                 appId = i.Value<uint>("appid")
                             });
-						}
-					}
-				}
+                        }
+                    }
+                }
 
 				stats.totalGames = games.GameCount;
 				stats.hoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
