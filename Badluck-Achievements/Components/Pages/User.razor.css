@@ -128,7 +128,7 @@
 .user-games-grid {
     overflow-x: hidden;
     overflow-y: inherit;
-    height: 750px;
+    max-height: 750px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;

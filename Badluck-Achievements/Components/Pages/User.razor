@@ -3,7 +3,9 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject BadluckAchievementsService BadluckAchievementsService
 @inject SteamAchievementService SteamAchievementService
-@rendermode RenderMode.InteractiveWebAssembly
+@rendermode InteractiveServer
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
 
 @using Badluck_Achievements.Components.Models
 @using Microsoft.AspNetCore.WebUtilities
@@ -79,7 +81,7 @@
 					<div class="games-header">
 						<h2><i class="fas fa-gamepad"></i> Your Games</h2>
 						<div class="games-filter">
-							<select class="filter-select>
+							<select class="filter-select" @onchange="OnFilter">
 								<option value="All Games">All Games</option>
 								<option value="100% Completed">100% Completed</option>
 								<option value="In Progress">In Progress</option>
@@ -162,7 +164,7 @@
 	</main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 @if (isLoadingStats)
 {
@@ -174,39 +176,33 @@ else if (stats is null)
 }
 else
 {
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script>
-		document.addEventListener('DOMContentLoaded', function() 
-		{
+		window.renderAchievementChart = function(completed, total) {
 		const ctx = document.getElementById('achievementChart').getContext('2d');
-		const chart = new Chart(ctx, 
-		{
+
+		if (window.achievementChart) {
+		window.achievementChart.destroy();
+		}
+
+		window.achievementChart = new Chart(ctx, {
 		type: 'doughnut',
 		data: {
 		labels: ['Completed', 'Uncompleted'],
-		datasets: 
-		[
-		{
-		data: [@stats.completedAchievements, @(stats.totalAchievements - stats.completedAchievements)],
-		backgroundColor: [
-		'#4CAF50',
-		'#F44336'
-		],
+		datasets: [{
+		data: [completed, total - completed],
+		backgroundColor: ['#4CAF50', '#F44336'],
 		borderWidth: 0
-		}
-		]
+		}]
 		},
 		options: {
 		responsive: true,
 		maintainAspectRatio: false,
 		cutout: '70%',
-		plugins: {
-		legend: {
-		display: false
-		}
-		}
+		plugins: { legend: { display: false } }
 		}
 		});
-		});
+		};
 	</script>
 }
 
@@ -252,5 +248,52 @@ else
 		isLoadingStats = false;
 		isLoadingModel = false;
 		isGamesLoading = false;
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await JSRuntime.InvokeVoidAsync(
+				"renderAchievementChart",
+				stats.completedAchievements,
+				stats.totalAchievements
+				)
+	;
+	}
+}
+
+@functions
+{
+		void OnFilter(ChangeEventArgs e)
+		{
+		string selectedString = e.Value.ToString();
+
+		switch (selectedString)
+		{
+			case "All Games":
+				gamesToShow = playerGames;
+				break;
+			case "100% Completed":
+				gamesToShow = playerGames
+					.Where(x => x.achievementsCount != 0 &&
+								x.achievementsCount == x.completedAchievements)
+					.ToList();
+				break;
+			case "In Progress":
+				gamesToShow = playerGames
+					.Where(x => x.achievementsCount != 0 &&
+								x.completedAchievements > 0 &&
+								x.achievementsCount != x.completedAchievements)
+					.ToList();
+				break;
+			case "Not Played":
+				gamesToShow = playerGames
+					.Where(x => x.playtimeForever == 0)
+					.ToList();
+				break;
+			default:
+				gamesToShow = playerGames;
+				break;
+		}
+		StateHasChanged();
 	}
 }

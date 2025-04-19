@@ -18,6 +18,13 @@ public class AuthController : Controller
         return LocalRedirect(returnUrl);
     }
 
+    [HttpGet("login-error")]
+    public async Task<IActionResult> LoginError(string returnUrl = "/")
+    {
+        await HttpContext.SignOutAsync();
+        return LocalRedirect(returnUrl);
+    }
+
     [HttpGet("nonfile")]
     public async Task<IActionResult> Nonfile(string returnUrl = "/")
     {

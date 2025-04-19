@@ -52,7 +52,6 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapControllers();
-app.MapBlazorHub();
-app.MapFallbackToFile("/Home.razor");
+app.MapFallbackToFile("/Routes.razor");
 
 app.Run();

@@ -1,6 +1,5 @@
 ﻿@page "/"
 @using Badluck_Achievements.Components.Models
-@using System.Text.RegularExpressions
 @using global::Components.Services_Achievements.Components
 @using System.Text;
 @inject IHttpClientFactory HttpClientFactory
@@ -160,8 +159,6 @@
 
             if (sesion.isAuthenticated)
             {
-                Console.WriteLine("Lol!");
-
                 achievements = await achievementsTask;
                 stats = await statsTask;
             }
