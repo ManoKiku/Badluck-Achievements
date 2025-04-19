@@ -1,6 +1,8 @@
+using AspNet.Security.OpenId.Steam;
 using Badluck_Achievements.Components;
 using Badluck_Achievements.Components.Pages;
 using Components.Services_Achievements.Components;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,12 +16,13 @@ builder.Services.AddSingleton(steamAchievementService).
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = "Cookies";
-    options.DefaultChallengeScheme = "Steam";
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = SteamAuthenticationDefaults.AuthenticationScheme;
 })
 .AddCookie("Cookies")
 .AddSteam(options =>
 {
+    options.CallbackPath = "/signin-steam";
     options.ApplicationKey = builder.Configuration["ApiKeys:SteamApiKey"];
 });
 
@@ -46,6 +49,7 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -53,5 +57,6 @@ app.UseAntiforgery();
 
 app.MapControllers();
 app.MapFallbackToFile("/Routes.razor");
+
 
 app.Run();

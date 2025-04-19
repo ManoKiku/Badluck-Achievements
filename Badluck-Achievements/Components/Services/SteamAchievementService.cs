@@ -7,6 +7,7 @@ using SteamWebAPI2.Interfaces;
 using SteamWebAPI2.Mappings;
 using SteamWebAPI2.Models;
 using SteamWebAPI2.Utilities;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,7 +34,14 @@ namespace Components.Services_Achievements.Components
             return response.Data;
         }
 
-        public async Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> GetGlobalAchievementPercentagesForAppAsync(uint appId)
+		public async Task<OwnedGamesResultModel?> GetOwnedGames(ulong steamId)
+		{
+            var data = await _steamFactory.CreateSteamWebInterface<PlayerService>()
+                .GetOwnedGamesAsync(steamId, includeAppInfo: true, includeFreeGames: true);
+            return data.Data;
+		}
+
+		public async Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> GetGlobalAchievementPercentagesForAppAsync(uint appId)
         {
             var response = await _steamFactory.
                 CreateSteamWebInterface<SteamUserStats>().
@@ -58,33 +66,94 @@ namespace Components.Services_Achievements.Components
             return response.Data.First();   
         }
 
-        public async Task<List<SteamPlayerGame>?> GetPlayerGames(ulong steamId)
+		public async Task<UserStats?> LoadUserStats(HttpClient httpClient, ulong steamId)
+		{
+			try
+			{
+				UserStats? stats = new UserStats();
+
+				var games = await GetOwnedGames(steamId);
+
+				httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
+				httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+
+				var list = new List<List<OwnedGameModel?>>();
+
+				for (int i = 0; i < games.GameCount; i += 390)
+				{
+					list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(400, games.GameCount - i)));
+				}
+
+				foreach (var arr in list)
+				{
+					await Task.Delay(100);
+					StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
+
+					for (int i = 0; i < arr.Count(); ++i)
+					{
+						builder.Append($"&appids[{i}]={arr[i].AppId}");
+					}
+					Console.WriteLine(builder.ToString());
+					var response = await httpClient.GetAsync(builder.ToString());
+
+					if (!response.IsSuccessStatusCode)
+					{
+						continue;
+					}
+
+					var json = await response.Content.ReadAsStringAsync();
+
+					var parsed = JObject.Parse(json);
+					foreach (JObject i in parsed["response"]!["games"]!)
+					{
+						stats.totalAchievements += i.Value<int>("total_achievements");
+
+						if (i is JObject obj && !obj.ContainsKey("achievements"))
+						{
+							continue;
+						}
+
+						stats.completedAchievements += i["achievements"]!.Count();
+
+						foreach (JObject j in i["achievements"]!)
+						{
+							stats.achievements.Add(new SteamAchievement
+							{
+								name = j.Value<string>("name")!,
+								isAchieved = true,
+								achievePercentage = double.Parse(j.Value<string>("player_percent_unlocked")),
+								iconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{i["appid"]}/{j.Value<string>("icon")}"
+							});
+						}
+					}
+				}
+
+				stats.totalGames = games.GameCount;
+				stats.hoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
+
+				return stats;
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
+		public async Task<Tuple<List<SteamPlayerGame>?, UserStats>> GetPlayerGames(ulong steamId, UserStats stats = null)
         {
             HttpClient httpClient = new HttpClient();
             var playerInterface = _steamFactory.CreateSteamWebInterface<PlayerService>();
             var responseGames = await playerInterface.GetOwnedGamesAsync(steamId, includeAppInfo: true, includeFreeGames: true);
             var games = responseGames.Data.OwnedGames;
 
-            StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
-            for (int i = 0; i < games.Count(); ++i)
+			var list = new List<List<OwnedGameModel?>>();
+
+            if(stats == null)
             {
-                builder.Append($"&appids[{i}]={games.ElementAt(i).AppId}");
+                await LoadUserStats(httpClient, steamId);
             }
 
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-
-            var response = await httpClient.GetAsync(builder.ToString());
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            var parsed = JObject.Parse(json);
-            return games.Select((g, i) => new SteamPlayerGame
+            return new Tuple<List<SteamPlayerGame>?, UserStats>(games.Select((g, i) => new SteamPlayerGame
             {
                 appID = g.AppId,
                 name = g.Name,
@@ -92,10 +161,10 @@ namespace Components.Services_Achievements.Components
                 playtime2Weeks = g.PlaytimeLastTwoWeeks?.TotalHours,
                 iconUrl = g.ImgIconUrl,
                 img = $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{g.AppId}/header.jpg",
-                achievementsCount = (uint)parsed["response"]!["games"]![i].Value<int>("total_achievements"),
-                completedAchievements = (parsed["response"]!["games"]![i] is JObject obj && obj.ContainsKey("achievements")) ? (uint)obj["achievements"]!.Count() : 0
-            }).ToList();
-        }
+                achievementsCount = stats.totalAchievements,
+                completedAchievements = (uint)stats.completedAchievements
+            }).ToList(), stats);
+		}
 
         public async Task<List<SteamAchievement>> GetAllPlayerAchievements(ulong steamId)
         {

@@ -22,6 +22,7 @@
     gap: 20px;
     max-width: 1400px;
     margin: 0 auto;
+    margin-bottom: 50px;
 }
 
 .profile-card {
@@ -30,7 +31,6 @@
     border-radius: 15px;
     padding: 25px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    position: sticky;
     top: 20px;
 }
 
@@ -92,7 +92,7 @@
 
 .badges-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
 }
 
@@ -126,9 +126,9 @@
 }
 
 .user-games-grid {
+    max-height: 750px;
     overflow-x: hidden;
     overflow-y: inherit;
-    max-height: 750px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
@@ -299,23 +299,30 @@
     color: #aaa;
 }
 
+.profile-right {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 @media (max-width: 1200px) {
     .profile-layout {
         grid-template-columns: 250px 1fr;
     }
 
     .profile-right {
+        height: auto;
         grid-column: span 2;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
         gap: 20px;
+        justify-content: normal;
     }
 }
 
 @media (max-width: 768px) {
     .badges-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+
         gap: 10px;
     }
 

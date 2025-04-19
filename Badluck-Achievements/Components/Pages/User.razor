@@ -3,7 +3,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject BadluckAchievementsService BadluckAchievementsService
 @inject SteamAchievementService SteamAchievementService
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 
@@ -69,17 +69,28 @@
 						<div class="profile-badges">
 							<h3><i class="fas fa-award"></i> Recent Badges</h3>
 							<div class="badges-grid">
-								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/df3ad0f25ca26c549030f922214c9da1c0948070.jpg" alt="Badge 1" class="badge-icon">
-								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 2" class="badge-icon">
-								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/236390/3c9e3748ec8cd6b9a1503b4d518fdaa5cc930360.jpg" alt="Badge 3" class="badge-icon">
-								<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/218620/af8e0963d4509d5151afbd8b436de78873e59b13.jpg" alt="Badge 4" class="badge-icon">
+								@if(isLoadingStats)
+								{
+									<p><em>Achievements is loading</em></p>
+								}
+								else if (stats is null)
+								{
+									<p><em>No achievements available.</em></p>
+								}
+								else if (stats.achievements.Any())
+								{
+									foreach (var i in stats.achievements.OrderBy(x => x.achievePercentage).Take(16))
+									{
+										<img src="@i.iconUrl" alt="@i.name" class="badge-icon" title="@i.achievePercentage%">
+									}
+								}
 							</div>
 						</div>
 					</div>
 				</div>
 				<div class="profile-center">
 					<div class="games-header">
-						<h2><i class="fas fa-gamepad"></i> Your Games</h2>
+						<h2><i class="fas fa-gamepad"></i> Games</h2>
 						<div class="games-filter">
 							<select class="filter-select" @onchange="OnFilter">
 								<option value="All Games">All Games</option>
@@ -164,47 +175,37 @@
 	</main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+	let achievementChartInstance = null;
 
+	function changeFlowChart(completed, uncompleted) {
+		const canvas = document.getElementById('achievementChart');
+		const ctx = canvas.getContext('2d');
 
-@if (isLoadingStats)
-{
-	<p><em>Diagram is loading</em></p>
-}
-else if (stats is null)
-{
-	<p><em>No stats available.</em></p>
-}
-else
-{
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script>
-		window.renderAchievementChart = function(completed, total) {
-		const ctx = document.getElementById('achievementChart').getContext('2d');
-
-		if (window.achievementChart) {
-		window.achievementChart.destroy();
+		if (achievementChartInstance) {
+			achievementChartInstance.destroy();
 		}
 
-		window.achievementChart = new Chart(ctx, {
-		type: 'doughnut',
-		data: {
-		labels: ['Completed', 'Uncompleted'],
-		datasets: [{
-		data: [completed, total - completed],
-		backgroundColor: ['#4CAF50', '#F44336'],
-		borderWidth: 0
-		}]
-		},
-		options: {
-		responsive: true,
-		maintainAspectRatio: false,
-		cutout: '70%',
-		plugins: { legend: { display: false } }
-		}
+		achievementChartInstance = new Chart(ctx, {
+			type: 'doughnut',
+			data: {
+				labels: ['Completed', 'Uncompleted'],
+				datasets: [{
+					data: [completed, uncompleted],
+					backgroundColor: ['#4CAF50', '#F44336'],
+					borderWidth: 0
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				cutout: '70%',
+				plugins: { legend: { display: false } }
+			}
 		});
-		};
-	</script>
-}
+	}
+</script>
 
 
 @code {
@@ -233,9 +234,10 @@ else
 
 		ulong steamId = ulong.Parse(userId);
 
-		stats = await BadluckAchievementsService.LoadUserStats(httpClient, steamId);
 		model = await SteamAchievementService.GetPlayerSummaries(steamId);
-		playerGames = await SteamAchievementService.GetPlayerGames(steamId);
+		stats = await SteamAchievementService.LoadUserStats(httpClient, steamId);
+		var buff = await SteamAchievementService.GetPlayerGames(steamId, stats);
+		playerGames = buff.Item1;
 
 		if(playerGames != null)
 		{
@@ -250,21 +252,20 @@ else
 		isGamesLoading = false;
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	bool isRendered = false;
+	protected override async void OnAfterRender(bool firstRender)
 	{
-		await JSRuntime.InvokeVoidAsync(
-				"renderAchievementChart",
-				stats.completedAchievements,
-				stats.totalAchievements
-				)
-	;
+		if (!firstRender && !isRendered && stats is not null)
+		{
+			isRendered = true;
+			await JSRuntime.InvokeVoidAsync("changeFlowChart", stats.completedAchievements, stats.totalAchievements - stats.completedAchievements);
+		}
 	}
 }
-
-@functions
-{
+	@functions
+	{
 		void OnFilter(ChangeEventArgs e)
-		{
+	{
 		string selectedString = e.Value.ToString();
 
 		switch (selectedString)

@@ -10,6 +10,8 @@
         public double completedAchievements { get; set; } = 0;
         // Hours playes
         public double hoursPlayed { get; set; } = 0;
+        // Rarest achievements
+        public List<SteamAchievement> achievements = new List<SteamAchievement>();
 
         public double CalculateCompetionRate()
         {

@@ -1,34 +1,31 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using AspNet.Security.OpenId.Steam;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Steam.Models.DOTA2;
 
 [Route("api/auth")]
+[ApiController]
 public class AuthController : Controller
 {
     [HttpGet("login")]
-    public IActionResult Login(string scheme, string returnUrl = "/")
+    public IActionResult Login(string returnUrl = "/")
     {
-        return Challenge(new AuthenticationProperties { RedirectUri = returnUrl }, scheme);
+        return Challenge(
+            new AuthenticationProperties { RedirectUri = returnUrl },
+            SteamAuthenticationDefaults.AuthenticationScheme
+        );
     }
 
     [HttpGet("logout")]
     public async Task<IActionResult> Logout(string returnUrl = "/")
     {
-        await HttpContext.SignOutAsync();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return LocalRedirect(returnUrl);
     }
 
     [HttpGet("login-error")]
-    public async Task<IActionResult> LoginError(string returnUrl = "/")
+    public IActionResult LoginError(string errorMessage)
     {
-        await HttpContext.SignOutAsync();
-        return LocalRedirect(returnUrl);
-    }
-
-    [HttpGet("nonfile")]
-    public async Task<IActionResult> Nonfile(string returnUrl = "/")
-    {
-        await HttpContext.SignOutAsync();
-        return LocalRedirect(returnUrl);
+        return RedirectToPage("/Error", new { Error = errorMessage });
     }
 }

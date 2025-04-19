@@ -47,7 +47,7 @@
                         <div class="game-overlay">
                             <div class="game-title"> @item.name</div>
                             <div class="game-stats">
-                                <span><i class="fas fa-users">  @FormatNumberToK(@item.playersCount)</i></span>
+                                <span><i class="fas fa-users">  @FormatNumberToK((uint)@item.playersCount)</i></span>
                                 <span><i class="fas fa-medal">@item.achievementsCount</i></span>
                             </div>
                         </div>
@@ -142,7 +142,7 @@
             {
                 var steamId = ulong.Parse(sesion.steamId);
                 achievementsTask = BadluckAchievementsService.LoadLatestAchievements(httpClient, steamId);
-                statsTask = BadluckAchievementsService.LoadUserStats(httpClient, steamId);
+                statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
             }
 
             var tasks = new List<Task> { popularGamesTask, newsTask };

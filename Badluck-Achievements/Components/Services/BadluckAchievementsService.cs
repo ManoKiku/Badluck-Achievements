@@ -2,6 +2,9 @@
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
+using SteamWebAPI2.Interfaces;
+using AngleSharp.Dom;
+using Steam.Models.SteamCommunity;
 
 namespace Components.Services_Achievements.Components
 {
@@ -126,44 +129,7 @@ namespace Components.Services_Achievements.Components
                 List<SteamAchievement> achievements = new List<SteamAchievement>();
                 var games = await _steamService.GetPlayerGames(steamId);
 
-                StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={steamApiKey}&steamid={steamId}&max_achievements=6");
-
-                for (int i = 0; i < games.Count(); ++i)
-                {
-                    builder.Append($"&appids[{i}]={games[i].appID}");
-                }
-
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
-                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-
-                var response = await httpClient.GetAsync(builder.ToString());
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return null;
-                }
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                if (!json.Contains("\"achievements\""))
-                {
-                    return null;
-                }
-
-                var parsed = JObject.Parse(json);
-
-                while (achievements.Where(x => x.isAchieved).Count() == 0)
-                {
-                    int index = random.Next(0, games.Count() - 1);
-                    if (parsed["response"]?["games"]?[index] is JObject gamesObj && gamesObj.ContainsKey("achievements"))
-                    {
-                        achievements = await _steamService.GetGameAchievementsAsync(
-                            steamId,
-                            games[index].appID);
-                    }
-                }
-
-                achievements = achievements
+                achievements = games.Item2.achievements
                     .Where(x => x.isAchieved)
                     .OrderBy(x => x.unlockTime)
                     .Take(5)
@@ -171,54 +137,6 @@ namespace Components.Services_Achievements.Components
                     .ToList();
 
                 return achievements;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public async Task<UserStats?> LoadUserStats(HttpClient httpClient, ulong steamId)
-        {
-            try
-            {
-                UserStats? stats = new UserStats();
-                 var games = await _steamService.GetPlayerGames(steamId);
-
-                StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={steamApiKey}&steamid={steamId}&max_achievements=10000");
-
-                for (int i = 0; i < games.Count(); ++i)
-                {
-                    builder.Append($"&appids[{i}]={games[i].appID}");
-                }
-
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
-                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-
-                var response = await httpClient.GetAsync(builder.ToString());
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return null;
-                }
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var parsed = JObject.Parse(json);
-                int countCompletedAchievements = 0;
-                int countAchievements = 0;
-                foreach (JObject i in parsed["response"]!["games"]!.Where(x => x is JObject obj && obj.ContainsKey("achievements")).ToArray())
-                {
-                    countAchievements += i.Value<int>("total_achievements");
-                    countCompletedAchievements += i["achievements"]!.Count();
-                }
-
-                stats.totalGames = games.Count();
-                stats.totalAchievements = countAchievements;
-                stats.completedAchievements = countCompletedAchievements;
-                stats.hoursPlayed = games.Sum((x) => x.playtimeForever);
-
-                return stats;
             }
             catch
             {
