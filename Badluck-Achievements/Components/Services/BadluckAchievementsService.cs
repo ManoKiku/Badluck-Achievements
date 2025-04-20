@@ -5,6 +5,8 @@ using System.Text;
 using SteamWebAPI2.Interfaces;
 using AngleSharp.Dom;
 using Steam.Models.SteamCommunity;
+using AngleSharp.Io;
+using Badluck_Achievements.Components;
 
 namespace Components.Services_Achievements.Components
 {
@@ -37,45 +39,50 @@ namespace Components.Services_Achievements.Components
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
-                var parsed = JObject.Parse(json);
+                var g = JObject.Parse(json);
 
-                await Parallel.ForEachAsync(parsed["items"]!.Take(amount), async (item, ct) =>
+                var requests = g["items"]!.Take(amount).Select(x =>
                 {
-                    try
+                    Match match = Regex.Match(x.Value<string>("logo")!, @"/apps/(\d+)");
+                    string? appID = string.Empty;
+                    if (match.Success)
                     {
-                        Match match = Regex.Match(item.Value<string>("logo")!, @"/apps/(\d+)");
-                        string? appID = string.Empty;
-                        if (match.Success)
-                        {
-                            appID = match.Groups[1].Value;
-                        }
-
-                        var url = $"http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={appID}&format=json";
-
-                        var response = await httpClient.GetAsync(url);
-
-                        uint achievementsCount = 0;
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var json = await response.Content.ReadAsStringAsync();
-                            var parsed = JObject.Parse(json);
-                            achievementsCount = (uint)parsed["achievementpercentages"]!["achievements"]!.Count();
-                        }
-
-                        uint playersCount = await _steamService.
-                        GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID));
-
-                        popularGames.Add(new SteamGame(
-                            item.Value<string>("name") ?? "Unknown",
-                            item.Value<string>("logo") ?? "default.png",
-                            achievementsCount,
-                            playersCount));
+                        appID = match.Groups[1].Value;
                     }
-                    catch (Exception e)
+
+                    return new
                     {
-                        Console.WriteLine(e.Message);
+                        name = x.Value<string>("name") ?? "Unknown",
+                        logo = x.Value<string>("logo") ?? "default.png",
+                        achievmentTask = httpClient.GetAsync("http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?format=json&gameid=" + appID),
+                        playerCountTask = _steamService.GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID))
+                    };
+
+                }
+                    ).ToList();
+
+                await Task.WhenAll(requests.Select(x => x.achievmentTask));
+                await Task.WhenAll(requests.Select(x => x.playerCountTask));
+
+                foreach (var r in requests)
+                {
+                    var s = await r.achievmentTask.Result.Content.ReadAsStringAsync();
+                    var parsed = JObject.Parse(s);
+
+                    uint achievementsCount = 0;
+                    if (parsed.HasValues)
+                    {
+                        achievementsCount = (uint)parsed["achievementpercentages"]!["achievements"]!.Count();
                     }
-                });
+
+                    uint playersCount = r.playerCountTask.Result;
+
+                    popularGames.Add(new SteamGame(
+                        r.name,
+                        r.logo,
+                        achievementsCount,
+                        playersCount));
+                }
 
                 return popularGames;
             }

@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
 
@@ -145,7 +146,7 @@ namespace Components.Services_Achievements.Components
                     }
                 }
 
-				stats.totalGames = games.GameCount;
+                stats.totalGames = games.GameCount;
 				stats.hoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
 
 				return stats;

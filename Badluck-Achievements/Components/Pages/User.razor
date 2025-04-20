@@ -112,23 +112,23 @@
 						}
 						else
 						{
-							@foreach (var i in gamesToShow)
-							{
+							<Virtualize Items="@gamesToShow" Context="i" OverscanCount="40" SpacerElement="tr">
 								<div class="user-game-card">
-									<img src="@i.img" alt="Game Banner" class="game-banner">
+									<img src="@i.img" alt="Game Banner" class="game-banner" loading="lazy">
 									<div class="game-overlay">
 										<div class="game-title">@i.name</div>
 										@if (i.achievementsCount != 0)
 										{
 											<div class="game-progress">
-												<div class="progress-bar" style="width: @((int)(i.completedAchievements / (double)i.achievementsCount * 100))%"></div>
+												<div class="progress-bar"
+												style="width: @((int)(i.completedAchievements / (double)i.achievementsCount * 100))%"></div>
 												<span> @((int)(i.completedAchievements / (double)i.achievementsCount * 100))% (@i.completedAchievements/@i.achievementsCount)</span>
 											</div>
 										}
 										<div class="game-playtime">@((int)i.playtimeForever) hrs</div>
 									</div>
 								</div>
-							}
+							</Virtualize>
 						}
 					</div>
 				</div> 
@@ -237,9 +237,14 @@
 		}
 
 		ulong steamId = ulong.Parse(userId);
+		Task<PlayerSummaryModel> modelTask = SteamAchievementService.GetPlayerSummaries(steamId);
+		Task<UserStats?> statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
 
-		model = await SteamAchievementService.GetPlayerSummaries(steamId);
-		stats = await SteamAchievementService.LoadUserStats(httpClient, steamId);
+		Task.WhenAll(new List<Task> { modelTask, statsTask });
+
+		model = await modelTask;
+		stats = await statsTask;
+
 		var buff = await SteamAchievementService.GetPlayerGames(steamId, stats);
 		playerGames = buff.Item1;
 
@@ -271,7 +276,7 @@
 
 			await JSRuntime.InvokeVoidAsync("renderGamesFlowChart", completedGames, inProgressGames,
 				allAchievementsGames - completedGames - inProgressGames);
-
+			await JSRuntime.InvokeVoidAsync("initializeLazyLoading");
 
 		}
 	}

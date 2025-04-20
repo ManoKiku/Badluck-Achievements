@@ -159,7 +159,8 @@
     left: 0;
     right: 0;
     padding: 15px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    background: linear-gradient(to top, rgb(0 0 0 / 0%), #000000);
+    height: 100%;
 }
 
 .game-title {
