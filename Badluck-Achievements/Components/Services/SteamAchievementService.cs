@@ -168,7 +168,7 @@ namespace Components.Services_Achievements.Components
 
             if(stats == null)
             {
-                await LoadUserStats(httpClient, steamId);
+                stats = await LoadUserStats(httpClient, steamId);
             }
 
             return new Tuple<List<SteamPlayerGame>?, UserStats>(games.Select((g, i) => new SteamPlayerGame

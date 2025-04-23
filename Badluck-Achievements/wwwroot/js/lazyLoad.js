@@ -9,7 +9,7 @@
         });
     });
 
-    document.querySelectorAll('img[src]').forEach(img => {
+    document.querySelectorAll('img[data-src]').forEach(img => {
         observer.observe(img);
     });
 }
