@@ -7,6 +7,8 @@ using AngleSharp.Dom;
 using Steam.Models.SteamCommunity;
 using AngleSharp.Io;
 using Badluck_Achievements.Components;
+using System.Net.Http;
+using System.Linq;
 
 namespace Components.Services_Achievements.Components
 {
@@ -25,8 +27,33 @@ namespace Components.Services_Achievements.Components
             this.newsApiKey = newsApiKey;
         }
 
-        public async Task<List<SteamGame>?> LoadPopularGamesAsync(HttpClient httpClient, int amount = 8)
+        public async Task<List<Tuple<DateTime, int>>?> LoadGameTimeAnalytics(uint steamId, HttpClient? httpClient = null)
         {
+            if (httpClient == null)
+            {
+                httpClient = new HttpClient();
+            }
+
+            var result = await httpClient.GetAsync($"https://steamcharts.com/app/{steamId}/chart-data.json");
+
+            if (!result.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var json = await result.Content.ReadAsStringAsync();
+            return JArray.Parse(json)
+                .Select(x=> new Tuple<DateTime, int>(DateTimeOffset.FromUnixTimeSeconds(x[0]!.Value<long>()).UtcDateTime, x[1]!.Value<int>()))
+                .ToList();
+        }
+
+        public async Task<List<SteamGame>?> LoadPopularGamesAsync(int amount = 8, HttpClient? httpClient = null)
+        {
+            if (httpClient == null)
+            {
+                httpClient = new HttpClient();
+            }
+
             try
             {
                 var response = await httpClient.GetAsync("https://store.steampowered.com/search/results?category1=998&json=1");
@@ -92,8 +119,13 @@ namespace Components.Services_Achievements.Components
             }
         }
 
-        public async Task<List<GamingNews>?> LoadGamingNewsAsync(HttpClient httpClient)
+        public async Task<List<GamingNews>?> LoadGamingNewsAsync(HttpClient? httpClient = null)
         {
+            if (httpClient == null)
+            {
+                httpClient = new HttpClient();
+            }
+
             try
             {
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
@@ -128,8 +160,13 @@ namespace Components.Services_Achievements.Components
             }
         }
 
-        public async Task<List<SteamAchievement>?> LoadLatestAchievements(HttpClient httpClient, ulong steamId)
+        public async Task<List<SteamAchievement>?> LoadLatestAchievements(ulong steamId, HttpClient? httpClient = null)
         {
+            if(httpClient == null)
+            {
+                httpClient = new HttpClient();
+            }
+
             try
             {
                 Random random = new Random();

@@ -1,104 +1,208 @@
-﻿@page "/game"
+﻿@using Badluck_Achievements.Components.Models
+@using Microsoft.AspNetCore.WebUtilities
+@using Steam.Models.SteamCommunity
+@using global::Components.Services_Achievements.Components
+@using Microsoft.JSInterop
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject SteamAchievementService SteamAchievementService
+@inject BadluckAchievementsService BadluckAchievementsService
+@inject IJSRuntime JSRuntime
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@page "/Game"
+
 <div class="container">
-    <div class="game-profile">
-        <img src="game-logo.jpg" alt="Game Logo" class="game-logo">
-        <h1 class="game-title">Cyber Revolution</h1>
-        <ul class="game-stats">
-            <li class="game-stat">
-                <span>Total Achievements</span>
-                <span>148</span>
-            </li>
-            <li class="game-stat">
-                <span>Your Progress</span>
-                <span>65%</span>
-            </li>
-            <li class="game-stat">
-                <span>Global Average</span>
-                <span>42%</span>
-            </li>
-            <li class="game-stat">
-                <span>Last Updated</span>
-                <span>2024-03-15</span>
-            </li>
-        </ul>
+    <div class="game-header" style="background-color: #2a2a2a">
+        <div class="header-content">
+            <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/capsule_231x87.jpg"
+                 class="game-logo" alt="CS2 Logo">
+            <div class="header-info">
+                <h1>Counter-Strike 2</h1>
+                <div class="release-date">Release Date: 21 Aug, 2012</div>
+                <div class="game-genres">Genres: Action, Free to Play</div>
+                <div class="game-developers">Developer: Valve</div>
+            </div>
+        </div>
     </div>
 
-    <main>
+    <div class="stats-grid">
+        <div class="stat-box" style="background-color: #2a2a2a">
+            <div class="stat-value">⭐ 96%</div>
+            <div class="stat-label">Positive Reviews</div>
+        </div>
+        <div class="stat-box" style="background-color: #2a2a2a">
+            <div class="stat-value">👤 1,234,567</div>
+            <div class="stat-label">Current Players</div>
+        </div>
+        <div class="stat-box" style="background-color: #2a2a2a">
+            <div class="stat-value">🏆 148</div>
+            <div class="stat-label">Achievements</div>
+        </div>
+        <div class="stat-box" style="background-color: #2a2a2a">
+            <div class="stat-value">🌐 27</div>
+            <div class="stat-label">Supported Languages</div>
+        </div>
+
+    </div>
+
+    <div class="content-grid">
+        <div class="description-box" style="background-color: #2a2a2a">
+            <h2>About the Game</h2>
+            <p>For over two decades, Counter-Strike has offered an elite competitive experience...</p>
+        </div>
+
+        <div class="requirements-box" style="background-color: #2a2a2a">
+            <h2>Requirements</h2>
+            <div class="requirements">
+                <ul>
+                    <li>OS: Windows® 10</li>
+                    <li>Processor: Intel® Core™ i5 750</li>
+                    <li>Memory: 8 GB RAM</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="screenshots-section" style="background-color: #2a2a2a">
+        <h2>Screenshots</h2>
+        <div class="screenshots-scroll">
+            <div class="screenshot-item">
+                <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/ss_796601d9d67faf53486eeb26d0724347cea67ddc.600x338.jpg" alt="Screenshot 1">
+            </div>
+        </div>
+    </div>
+
+    <div class="achievements-section" style="background-color: #2a2a2a">
+        <h2>Achievements (148)</h2>
         <div class="achievements-grid">
-            <div class="achievement-card">
-                <div class="achievement-header">
-                    <img src="achievement-icon.jpg" class="achievement-icon" alt="Icon">
-                    <div>
-                        <h3>Neon Dominator</h3>
-                        <p>0.7% of players earned this</p>
+            <div class="achievement-item">
+                <img src="https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/730/f75dd04fa12445a8ec43be65fa16ff1b8d2bf82e.jpg"
+                     class="achievement-icon" alt="Achievement">
+                <div class="achievement-info">
+                    <h3>A New Beginning</h3>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 4.5%"></div>
                     </div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 12%"></div>
+                    <span>4.5% of players</span>
                 </div>
             </div>
-
-        </div>
-    </main>
-
-    <div class="analytics-panel">
-        <h2>Progress Analytics</h2>
-        <div class="chart-container">
-            <canvas id="progressChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <canvas id="categoryChart"></canvas>
         </div>
     </div>
+
+    <section class="chart-section">
+        <h2 class="section-title">Players Online History</h2>
+        <div class="chart-container">
+            <canvas id="playersChart"></canvas>
+        </div>
+    </section>
 </div>
 
 <script>
-    new Chart(document.getElementById('progressChart'), {
-        type: 'bar',
-        data: {
-            labels: ['Completed', 'In Progress', 'Locked'],
-            datasets: [{
-                data: [65, 25, 10],
-                backgroundColor: [
-                    '#2A3F5F',
-                    '#4A6572',
-                    '#DEE2E6'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false }
-            },
-            scales: {
-                y: { display: false },
-                x: { grid: { display: false } }
-            }
-        }
-    });
+    function renderPlayersChart(labels, playersData) {
+        const canvas = document.getElementById('playersChart');
+        const ctx = canvas.getContext('2d');
 
-    new Chart(document.getElementById('categoryChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Combat', 'Exploration', 'Story', 'Collection'],
-            datasets: [{
-                data: [35, 25, 20, 20],
-                backgroundColor: [
-                    '#2A3F5F',
-                    '#4A6572',
-                    '#778899',
-                    '#DEE2E6'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            cutout: '70%',
-            plugins: {
-                legend: { position: 'bottom' }
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Players Online',
+                    data: playersData,
+                    borderColor: '#2A3F5F',
+                    backgroundColor: 'rgba(42, 63, 95, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2,
+                    pointRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Players Online'
+                        },
+                        grid: {
+                            color: 'rgba(255,255,255,0.1)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
             }
-        }
-    });
+        });
+    }
 </script>
+
+@code{
+    public Sesion? sesion { get; set; }
+    private string? id;
+
+    private List<SteamAchievement>? achievements;
+    private List<Tuple<DateTime, int>>? players;
+
+    private bool isLoadingAchievements = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient httpClient = HttpClientFactory.CreateClient();
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParams = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParams.TryGetValue("id", out var idValue))
+        {
+            id = idValue.FirstOrDefault()!;
+        }
+
+        uint gameId = uint.Parse(id);
+
+        // Task<List<SteamAchievement>> achievementsTask = SteamAchievementService.GetGameAchievementsAsync(76561198141150947, gameId);
+        Task<List<Tuple<DateTime,int>>?> analyticsTask = BadluckAchievementsService.LoadGameTimeAnalytics(gameId, httpClient);
+
+        await Task.WhenAll(/* achievementsTask, */ analyticsTask);
+
+        // achievements = achievementsTask.Result;
+        players = analyticsTask.Result;
+
+          
+    }
+
+    bool isRendered = false;
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender && players is not null)
+        {
+            await JSRuntime.InvokeVoidAsync("renderPlayersChart", 
+                   players.Select(x => x.Item1.ToString("yyyy-MM-dd")),
+                   players.Select(x => x.Item2));
+        }
+    }
+}

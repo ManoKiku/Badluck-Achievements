@@ -1,17 +1,18 @@
-﻿@page "/User"
-@inject NavigationManager NavigationManager
-@inject IHttpClientFactory HttpClientFactory
-@inject BadluckAchievementsService BadluckAchievementsService
-@inject SteamAchievementService SteamAchievementService
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
-@using Microsoft.JSInterop
-@inject IJSRuntime JSRuntime
-
-@using Badluck_Achievements.Components.Models
+﻿@using Badluck_Achievements.Components.Models
 @using Microsoft.AspNetCore.WebUtilities
 @using Steam.Models.SteamCommunity
 @using global::Components.Services_Achievements.Components
 @using System.Diagnostics;
+@using Microsoft.JSInterop
+
+@page "/User"
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+@inject BadluckAchievementsService BadluckAchievementsService
+@inject SteamAchievementService SteamAchievementService
+@inject IJSRuntime JSRuntime
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Badluck Achievements - User profile</PageTitle>
 
@@ -164,7 +165,6 @@
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 	function renderAchievementsFlowChart(completed, uncompleted) {
 	const canvas = document.getElementById('achievementChart');
@@ -283,9 +283,10 @@
 		}
 	}
 }
-	@functions
-	{
-		void OnFilter(ChangeEventArgs e)
+
+@functions
+{
+	void OnFilter(ChangeEventArgs e)
 	{
 		string selectedString = e.Value.ToString();
 

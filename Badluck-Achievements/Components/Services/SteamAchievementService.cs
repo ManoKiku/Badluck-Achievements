@@ -1,6 +1,7 @@
 ﻿using Badluck_Achievements.Components;
 using Badluck_Achievements.Components.Models;
 using Newtonsoft.Json.Linq;
+using Steam.Models;
 using Steam.Models.SteamCommunity;
 using Steam.Models.SteamPlayer;
 using SteamWebAPI2.Interfaces;
@@ -222,28 +223,33 @@ namespace Components.Services_Achievements.Components
 
             try
             {
-                var response = await steamUserStats.GetPlayerAchievementsAsync(appId, steamUserId);
-                var schema = await steamUserStats.GetSchemaForGameAsync(appId);
+                Task<ISteamWebResponse<PlayerAchievementResultModel>> responseTask = steamUserStats.GetPlayerAchievementsAsync(appId, steamUserId, "english");
+                Task<ISteamWebResponse<SchemaForGameResultModel>> schemaTask = steamUserStats.GetSchemaForGameAsync(appId, "english");
+
+                await Task.WhenAll(responseTask, schemaTask);
+
+                var response = responseTask.Result;
+                var schema = schemaTask.Result;
 
                 var achievementTasks = response.Data.Achievements
                     .Select(async a =>
                     {
                         var schemaAchievement = schema.Data.AvailableGameStats?.Achievements?
                             .ToDictionary(a => a.Name, a => a);
-
-                        Steam.Models.SchemaGameAchievementModel sa;
+                        Console.WriteLine("Yes");
+                        SchemaGameAchievementModel sa;
                         return new SteamAchievement
                         {
                             name = a.Name,
                             isAchieved = a.Achieved == 1,
                             unlockTime = a.UnlockTime.ToUnixTimeStamp() > 0 ? a.UnlockTime : null,
-                            iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ? $"{sa.Icon}" : null,
-                            achievePercentage = await GetAchievementPercentage(appId, a.APIName)
+                            iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ? $"{sa.Icon}" : null
                         };
-                    })
-                    .ToList();
-                var achievments = await Task.WhenAll(achievementTasks);
-                return achievments.ToList();
+                    });
+                   
+                await Task.WhenAll(achievementTasks);
+
+                return achievementTasks.Select(x=> x.Result).ToList();
             } 
             catch (Exception ex)
             {

@@ -2,6 +2,7 @@
 @using Badluck_Achievements.Components.Models
 @using global::Components.Services_Achievements.Components
 @using System.Text;
+
 @inject IHttpClientFactory HttpClientFactory
 @inject IConfiguration Configuration
 @inject SteamAchievementService SteamAchievementService
@@ -132,7 +133,7 @@
         try
         {
             HttpClient httpClient = HttpClientFactory.CreateClient();
-            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync(httpClient, 11);
+            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync(11, httpClient);
             var newsTask = BadluckAchievementsService.LoadGamingNewsAsync(httpClient);
             Task<List<SteamAchievement>?>? achievementsTask = null;
             Task<UserStats?>? statsTask = null;
@@ -140,7 +141,7 @@
             if (sesion!.isAuthenticated)
             {
                 var steamId = ulong.Parse(sesion.steamId);
-                achievementsTask = BadluckAchievementsService.LoadLatestAchievements(httpClient, steamId);
+                achievementsTask = BadluckAchievementsService.LoadLatestAchievements(steamId, httpClient);
                 statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
             }
 
