@@ -42,8 +42,14 @@ namespace Components.Services_Achievements.Components
             }
 
             var json = await result.Content.ReadAsStringAsync();
-            return JArray.Parse(json)
-                .Select(x=> new Tuple<DateTime, int>(DateTimeOffset.FromUnixTimeSeconds(x[0]!.Value<long>()).UtcDateTime, x[1]!.Value<int>()))
+            Console.WriteLine(json);
+            var parsed = JArray.Parse(json);
+            return parsed
+                .Select(x=> new Tuple<DateTime, int>(DateTimeOffset.FromUnixTimeSeconds(x[0].Value<long>() / 1000).UtcDateTime, x[1]!.Value<int>()))
+                .Chunk(24)
+                .Select(x => new Tuple<DateTime, int>(x.First().Item1, (int)x.Average(y => y.Item2)))
+                .DistinctBy(x => x.Item1.DayOfYear)
+                .TakeLast(14)
                 .ToList();
         }
 

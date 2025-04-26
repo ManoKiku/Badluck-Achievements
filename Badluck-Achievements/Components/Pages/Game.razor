@@ -1,6 +1,7 @@
 ﻿@using Badluck_Achievements.Components.Models
 @using Microsoft.AspNetCore.WebUtilities
 @using Steam.Models.SteamCommunity
+@using System.Text.RegularExpressions
 @using global::Components.Services_Achievements.Components
 @using Microsoft.JSInterop
 
@@ -15,89 +16,119 @@
 @page "/Game"
 
 <div class="container">
-    <div class="game-header" style="background-color: #2a2a2a">
-        <div class="header-content">
-            <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/capsule_231x87.jpg"
-                 class="game-logo" alt="CS2 Logo">
-            <div class="header-info">
-                <h1>Counter-Strike 2</h1>
-                <div class="release-date">Release Date: 21 Aug, 2012</div>
-                <div class="game-genres">Genres: Action, Free to Play</div>
-                <div class="game-developers">Developer: Valve</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-box" style="background-color: #2a2a2a">
-            <div class="stat-value">⭐ 96%</div>
-            <div class="stat-label">Positive Reviews</div>
-        </div>
-        <div class="stat-box" style="background-color: #2a2a2a">
-            <div class="stat-value">👤 1,234,567</div>
-            <div class="stat-label">Current Players</div>
-        </div>
-        <div class="stat-box" style="background-color: #2a2a2a">
-            <div class="stat-value">🏆 148</div>
-            <div class="stat-label">Achievements</div>
-        </div>
-        <div class="stat-box" style="background-color: #2a2a2a">
-            <div class="stat-value">🌐 27</div>
-            <div class="stat-label">Supported Languages</div>
-        </div>
-
-    </div>
-
-    <div class="content-grid">
-        <div class="description-box" style="background-color: #2a2a2a">
-            <h2>About the Game</h2>
-            <p>For over two decades, Counter-Strike has offered an elite competitive experience...</p>
-        </div>
-
-        <div class="requirements-box" style="background-color: #2a2a2a">
-            <h2>Requirements</h2>
-            <div class="requirements">
-                <ul>
-                    <li>OS: Windows® 10</li>
-                    <li>Processor: Intel® Core™ i5 750</li>
-                    <li>Memory: 8 GB RAM</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <div class="screenshots-section" style="background-color: #2a2a2a">
-        <h2>Screenshots</h2>
-        <div class="screenshots-scroll">
-            <div class="screenshot-item">
-                <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/ss_796601d9d67faf53486eeb26d0724347cea67ddc.600x338.jpg" alt="Screenshot 1">
-            </div>
-        </div>
-    </div>
-
-    <div class="achievements-section" style="background-color: #2a2a2a">
-        <h2>Achievements (148)</h2>
-        <div class="achievements-grid">
-            <div class="achievement-item">
-                <img src="https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/730/f75dd04fa12445a8ec43be65fa16ff1b8d2bf82e.jpg"
-                     class="achievement-icon" alt="Achievement">
-                <div class="achievement-info">
-                    <h3>A New Beginning</h3>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: 4.5%"></div>
+    <div class="left-column">
+        @if(isLoadingAnalytics)
+        {
+            <p><em>Loading data...</em></p>
+        }
+        else
+        {
+            <div class="game-header" style="background-color: #2a2a2a">
+                <div class="header-content">
+                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/@id/header.jpg"
+                         class="game-logo" alt="Logo" style="width: 400px;">
+                    <div class="header-info">
+                        <h1>@(analytics.Value<string>("name"))</h1>
+                        <div class="release-date">Release Date: @(analytics["release_date"].Value<string>("date"))</div>
+                        <div class="game-genres">Genres: @(string.Join(", ", analytics["genres"]!.Select(x => x.Value<string>("description"))))</div>
+                        <div class="game-developers">Developer: @(analytics["developers"]!.First())</div>
                     </div>
-                    <span>4.5% of players</span>
                 </div>
             </div>
-        </div>
+
+            <div class="stats-grid">
+                <div class="stat-box" style="background-color: #2a2a2a">
+                    <div class="stat-value">⭐ @(analytics["recommendations"].Value<string>("total"))</div>
+                    <div class="stat-label">Positive Reviews</div>
+                </div>
+                <div class="stat-box" style="background-color: #2a2a2a">
+                    <div class="stat-value">👤 @(players.LastOrDefault().Item2)</div>
+                    <div class="stat-label">Current Players</div>
+                </div>
+                <div class="stat-box" style="background-color: #2a2a2a">
+                    <div class="stat-value">🏆 @(analytics["achievements"].Value<string>("total"))</div>
+                    <div class="stat-label">Achievements</div>
+                </div>
+                <div class="stat-box" style="background-color: #2a2a2a">
+                    <div class="stat-value">🌐 @(analytics.Value<string>("supported_languages").Count(x => x == ',') + 1)</div>
+                    <div class="stat-label">Supported Languages</div>
+                </div>
+
+            </div>
+
+            <div class="content-grid">
+                <div class="description-box" style="background-color: #2a2a2a">
+                    <h2>About the Game</h2>
+                    <p>@(Regex.Replace(analytics.Value<string>("detailed_description"), "<[^>]*>", string.Empty))</p>
+                </div>
+
+@*          <div class="requirements-box" style="background-color: #2a2a2a">
+                <h2>Requirements</h2>
+                <div class="requirements">
+                    <ul>
+                        <li>OS: Windows® 10</li>
+                        <li>Processor: Intel® Core™ i5 750</li>
+                        <li>Memory: 8 GB RAM</li>
+                    </ul>
+                </div>
+            </div>*@
+            </div> 
+
+            <div class="screenshots-section" style="background-color: #2a2a2a">
+                <h2>Screenshots</h2>
+                <div class="screenshots-scroll">
+                    @foreach (JObject i in analytics["screenshots"]!)
+                    {
+                        <div class="screenshot-item">
+                            <img src="@(i.Value<string>("path_thumbnail"))" alt="Screenshot">
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
 
-    <section class="chart-section">
-        <h2 class="section-title">Players Online History</h2>
-        <div class="chart-container">
-            <canvas id="playersChart"></canvas>
+    @if (isLoadingAchievements)
+    {
+        <p><em>Loading achievements...</em></p>
+    }
+    else if(achievements is not null && achievements.Any())
+    {
+    <div class="middle-column">
+        <div class="achievements-section" style="background-color: #1a1a1a">
+            <h2>Achievements (@achievements.Count())</h2>
+            <div class="achievements-grid">
+                @foreach (var i in achievements.OrderByDescending(x => x.achievePercentage))
+                {
+                    <div class="achievement-item">
+                        <img src="@i.iconUrl"
+                                class="achievement-icon" alt="Achievement">
+                        <div class="achievement-info">
+                            <h3>@i.name</h3>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: @i.achievePercentage%"></div>
+                            </div>
+                            <span>@i.achievePercentage% of players</span>
+                            @if(i.isAchieved)
+                            {
+                                <br>
+                                <span>Achieved! @(i.unlockTime?.ToString("yyyy-MM-dd"))</span>
+                            }
+                            </div>
+                    </div>
+                }
+            </div>
         </div>
-    </section>
+    </div>
+    }
+    <div class="right-column">
+        <section class="chart-section">
+            <h2 class="section-title">Players Online History</h2>
+            <div class="chart-container">
+                <canvas id="playersChart"></canvas>
+            </div>
+        </section>
+    </div>
 </div>
 
 <script>
@@ -163,13 +194,18 @@
 </script>
 
 @code{
+    [CascadingParameter]
     public Sesion? sesion { get; set; }
+
     private string? id;
 
     private List<SteamAchievement>? achievements;
     private List<Tuple<DateTime, int>>? players;
+    private JObject? analytics;
 
-    private bool isLoadingAchievements = false;
+    private bool isLoadingAchievements = true;
+    private bool isLoadingPlayers = true;
+    private bool isLoadingAnalytics = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -184,15 +220,30 @@
 
         uint gameId = uint.Parse(id);
 
-        // Task<List<SteamAchievement>> achievementsTask = SteamAchievementService.GetGameAchievementsAsync(76561198141150947, gameId);
+        ulong steamId = 76561198836147236;
+        if(sesion is not null)
+        {
+            ulong.TryParse(sesion.steamId, out steamId);
+        }
+
+
+        Task<List<SteamAchievement>> achievementsTask = SteamAchievementService.GetGameAchievementsAsync(steamId, gameId);
         Task<List<Tuple<DateTime,int>>?> analyticsTask = BadluckAchievementsService.LoadGameTimeAnalytics(gameId, httpClient);
+        Task<HttpResponseMessage> gameInfoTask = httpClient.GetAsync($"https://store.steampowered.com/api/appdetails?l=english&appids={id}");
 
-        await Task.WhenAll(/* achievementsTask, */ analyticsTask);
+        await Task.WhenAll(achievementsTask, analyticsTask, gameInfoTask);
 
-        // achievements = achievementsTask.Result;
+        achievements = achievementsTask.Result;
         players = analyticsTask.Result;
 
-          
+        var json = await gameInfoTask.Result.Content.ReadAsStringAsync();
+        analytics = (JObject)JObject.Parse(json)[id]["data"];
+
+        Console.WriteLine(achievements.Count());
+
+        isLoadingAchievements = false;
+        isLoadingAnalytics = false;
+        isLoadingPlayers = false;
     }
 
     bool isRendered = false;

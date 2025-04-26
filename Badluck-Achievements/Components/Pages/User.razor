@@ -115,21 +115,24 @@
 						else
 						{
 							<Virtualize Items="@gamesToShow" Context="i" OverscanCount="40" SpacerElement="tr">
-								<div class="user-game-card">
-									<img src="@i.img" alt="Game Banner" class="game-banner" loading="lazy">
-									<div class="game-overlay">
-										<div class="game-title">@i.name</div>
-										@if (i.achievementsCount != 0)
-										{
-											<div class="game-progress">
-												<div class="progress-bar"
-												style="width: @((int)(i.completedAchievements / (double)i.achievementsCount * 100))%"></div>
-												<span> @((int)(i.completedAchievements / (double)i.achievementsCount * 100))% (@i.completedAchievements/@i.achievementsCount)</span>
-											</div>
-										}
-										<div class="game-playtime">@((int)i.playtimeForever) hrs</div>
+								<a href="/game?id=@i.appID">
+									<div class="user-game-card">
+										<img src="@i.img" alt="Game Banner" class="game-banner" loading="lazy">
+										<div class="game-overlay">
+											<div class="game-title">@i.name</div>
+											@if (i.achievementsCount != 0)
+											{
+												<div class="game-progress">
+													<div class="progress-bar"
+															style="width: @((int)(i.completedAchievements / (double)i.achievementsCount * 100))%"></div>
+													<span> @((int)(i.completedAchievements / (double)i.achievementsCount * 100))% (@i.completedAchievements/@i.achievementsCount)</span>
+												</div>
+
+											}
+											<div class="game-playtime">@((int)i.playtimeForever) hrs</div>
+										</div>
 									</div>
-								</div>
+								</a>
 							</Virtualize>
 						}
 					</div>

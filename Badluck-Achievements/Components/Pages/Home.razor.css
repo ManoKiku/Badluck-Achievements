@@ -12,6 +12,7 @@ article {
     display: flex;
     flex-direction: column;
     gap: 30px;
+    padding: 20px;
 }
 
 .content-block {
