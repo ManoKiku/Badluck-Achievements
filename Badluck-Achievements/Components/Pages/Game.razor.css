@@ -117,8 +117,9 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
-    height: 400px;
+    height: auto;
     overflow-y: auto;
+    max-height: 400px;
 }
 
 .achievement-item {
@@ -128,6 +129,7 @@
     padding: 15px;
     background: #333;
     border-radius: 8px;
+    height: 130px;
 }
 
 .achievement-icon {

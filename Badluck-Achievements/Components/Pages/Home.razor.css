@@ -87,6 +87,7 @@ h2::after {
     right: 0;
     padding: 15px;
     background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+    color: white;
 }
 
 .game-title {

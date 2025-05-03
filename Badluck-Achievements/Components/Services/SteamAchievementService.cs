@@ -226,28 +226,59 @@ namespace Components.Services_Achievements.Components
                 Task<ISteamWebResponse<PlayerAchievementResultModel>> responseTask = steamUserStats.GetPlayerAchievementsAsync(appId, steamUserId, "english");
                 Task<ISteamWebResponse<SchemaForGameResultModel>> schemaTask = steamUserStats.GetSchemaForGameAsync(appId, "english");
                 Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> apiAchievementsTask = GetGlobalAchievementPercentagesForAppAsync(appId);
+                await Task.WhenAll(schemaTask, apiAchievementsTask);
 
-                await Task.WhenAll(responseTask, schemaTask, apiAchievementsTask);
+                ISteamWebResponse<PlayerAchievementResultModel>? response = null; 
+                
+                try
+                {
+                    response = await responseTask;
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
 
-                var response = responseTask.Result;
                 var schema = schemaTask.Result;
+                Console.WriteLine("Achievements schema: " + schema.Data.AvailableGameStats.Achievements.Count);
                 var apiAchievements = apiAchievementsTask.Result;
-                var achievementTasks = response.Data.Achievements
-                    .Select(async a =>
-                    {
-                        var schemaAchievement = schema.Data.AvailableGameStats?.Achievements?
-                            .ToDictionary(a => a.Name, a => a);
-                        SchemaGameAchievementModel sa;
+                Console.WriteLine("Api achievements: " + apiAchievements.Count);
 
+                IEnumerable<Task<SteamAchievement>> achievementTasks;
+
+                if (response is not null)
+                {
+                    achievementTasks = response.Data.Achievements
+                        .Select(async a =>
+                        {
+                            var schemaAchievement = schema.Data.AvailableGameStats?.Achievements?
+                                .ToDictionary(a => a.Name, a => a);
+                            SchemaGameAchievementModel sa;
+
+                            return new SteamAchievement
+                            {
+                                name = a.Name,
+                                isAchieved = a.Achieved == 1,
+                                unlockTime = a.UnlockTime.ToUnixTimeStamp() > 0 ? a.UnlockTime : null,
+                                iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ? $"{sa.Icon}" : null,
+                                achievePercentage = apiAchievements.Where(x => x.Name == a.APIName).FirstOrDefault().Percent
+                            };
+                        });
+                }
+                else
+                {
+                    achievementTasks = schema.Data.AvailableGameStats.Achievements.Select(async a =>
+                    {
                         return new SteamAchievement
                         {
                             name = a.Name,
-                            isAchieved = a.Achieved == 1,
-                            unlockTime = a.UnlockTime.ToUnixTimeStamp() > 0 ? a.UnlockTime : null,
-                            iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ? $"{sa.Icon}" : null,
-                            achievePercentage = apiAchievements.Where(x => x.Name == a.APIName).FirstOrDefault().Percent
+                            isAchieved = false,
+                            unlockTime = null,
+                            iconUrl = a.Icon,
+                            achievePercentage = apiAchievements.Where(x => x.Name == a.Name).FirstOrDefault().Percent
                         };
                     });
+                }
                    
                 await Task.WhenAll(achievementTasks);
 
@@ -260,7 +291,7 @@ namespace Components.Services_Achievements.Components
             }
         }
 
-        private async Task<double> GetAchievementPercentage(uint appID, string achievementApiName)
+        public async Task<double> GetAchievementPercentage(uint appID, string achievementApiName)
         {
             var httpClient = new HttpClient();
             var response = await httpClient.GetAsync("https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0001/?gameid=" + appID);

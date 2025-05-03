@@ -21,12 +21,12 @@
         {
             <p><em>Loading data...</em></p>
         }
-        else
+        else if(analytics is not null)
         {
             <div class="game-header" style="background-color: #2a2a2a">
                 <div class="header-content">
                     <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/@id/header.jpg"
-                         class="game-logo" alt="Logo" style="width: 400px;">
+                         class="game-logo" alt="Logo" style="width: auto;max-width: 300px;">
                     <div class="header-info">
                         <h1>@(analytics.Value<string>("name"))</h1>
                         <div class="release-date">Release Date: @(analytics["release_date"].Value<string>("date"))</div>
@@ -38,7 +38,9 @@
 
             <div class="stats-grid">
                 <div class="stat-box" style="background-color: #2a2a2a">
-                    <div class="stat-value">⭐ @(analytics["recommendations"].Value<string>("total"))</div>
+                    <div class="stat-value">
+                        ⭐ @((int)(reviews["query_summary"].Value<uint>("total_positive") / reviews["query_summary"].Value<double>("total_reviews") * 100))%
+                    </div>
                     <div class="stat-label">Positive Reviews</div>
                 </div>
                 <div class="stat-box" style="background-color: #2a2a2a">
@@ -46,7 +48,7 @@
                     <div class="stat-label">Current Players</div>
                 </div>
                 <div class="stat-box" style="background-color: #2a2a2a">
-                    <div class="stat-value">🏆 @(analytics["achievements"].Value<string>("total"))</div>
+                    <div class="stat-value">🏆 @(analytics.ContainsKey("achievements") ? analytics["achievements"].Value<string>("total") : 0)</div>
                     <div class="stat-label">Achievements</div>
                 </div>
                 <div class="stat-box" style="background-color: #2a2a2a">
@@ -59,10 +61,10 @@
             <div class="content-grid">
                 <div class="description-box" style="background-color: #2a2a2a">
                     <h2>About the Game</h2>
-                    <p>@(Regex.Replace(analytics.Value<string>("detailed_description"), "<[^>]*>", string.Empty))</p>
+                    <p style="max-height: 250px;overflow-y: auto;">@(Regex.Replace(analytics.Value<string>("detailed_description"), "<[^>]*>", string.Empty))</p>
                 </div>
 
-@*          <div class="requirements-box" style="background-color: #2a2a2a">
+                @*          <div class="requirements-box" style="background-color: #2a2a2a">
                 <h2>Requirements</h2>
                 <div class="requirements">
                     <ul>
@@ -94,32 +96,32 @@
     }
     else if(achievements is not null && achievements.Any())
     {
-    <div class="middle-column">
-        <div class="achievements-section" style="background-color: #1a1a1a">
-            <h2>Achievements (@achievements.Count())</h2>
-            <div class="achievements-grid">
-                @foreach (var i in achievements.OrderByDescending(x => x.achievePercentage))
-                {
-                    <div class="achievement-item">
-                        <img src="@i.iconUrl"
-                                class="achievement-icon" alt="Achievement">
-                        <div class="achievement-info">
-                            <h3>@i.name</h3>
-                            <div class="progress-bar">
-                                <div class="progress" style="width: @i.achievePercentage%"></div>
+        <div class="middle-column">
+            <div class="achievements-section" style="background-color: #1a1a1a">
+                <h2>Achievements (@achievements.Count())</h2>
+                <div class="achievements-grid">
+                    @foreach (var i in achievements.OrderByDescending(x => x.achievePercentage))
+                    {
+                        <div class="achievement-item">
+                            <img src="@i.iconUrl"
+                            class="achievement-icon" alt="Achievement">
+                            <div class="achievement-info">
+                                <h3 style="font-size: 1rem;">@i.name</h3>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: @i.achievePercentage%"></div>
+                                </div>
+                                <span>@i.achievePercentage% of players</span>
+                                @if(i.isAchieved)
+                                {
+                                    <br>
+                                    <span>Achieved at: @(i.unlockTime?.ToString("yyyy-MM-dd"))</span>
+                                }
                             </div>
-                            <span>@i.achievePercentage% of players</span>
-                            @if(i.isAchieved)
-                            {
-                                <br>
-                                <span>Achieved! @(i.unlockTime?.ToString("yyyy-MM-dd"))</span>
-                            }
-                            </div>
-                    </div>
-                }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
-    </div>
     }
     <div class="right-column">
         <section class="chart-section">
@@ -133,63 +135,63 @@
 
 <script>
     function renderPlayersChart(labels, playersData) {
-        const canvas = document.getElementById('playersChart');
-        const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('playersChart');
+    const ctx = canvas.getContext('2d');
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Players Online',
-                    data: playersData,
-                    borderColor: '#2A3F5F',
-                    backgroundColor: 'rgba(42, 63, 95, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 2,
-                    pointRadius: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: 'Players Online'
-                        },
-                        grid: {
-                            color: 'rgba(255,255,255,0.1)'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        },
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
-                }
-            }
-        });
+    new Chart(ctx, {
+    type: 'line',
+    data: {
+    labels: labels,
+    datasets: [{
+    label: 'Players Online',
+    data: playersData,
+    borderColor: '#2A3F5F',
+    backgroundColor: 'rgba(42, 63, 95, 0.1)',
+    tension: 0.4,
+    fill: true,
+    borderWidth: 2,
+    pointRadius: 3
+    }]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+    y: {
+    beginAtZero: false,
+    title: {
+    display: true,
+    text: 'Players Online'
+    },
+    grid: {
+    color: 'rgba(255,255,255,0.1)'
+    }
+    },
+    x: {
+    title: {
+    display: true,
+    text: 'Date'
+    },
+    grid: {
+    display: false
+    },
+    ticks: {
+    maxRotation: 45,
+    minRotation: 45
+    }
+    }
+    },
+    plugins: {
+    legend: {
+    position: 'top',
+    },
+    tooltip: {
+    mode: 'index',
+    intersect: false
+    }
+    }
+    }
+    });
     }
 </script>
 
@@ -199,9 +201,10 @@
 
     private string? id;
 
-    private List<SteamAchievement>? achievements;
-    private List<Tuple<DateTime, int>>? players;
-    private JObject? analytics;
+    private List<SteamAchievement>? achievements = null;
+    private List<Tuple<DateTime, int>>? players = null;
+    private JObject? analytics = null;
+    private JObject? reviews = null;
 
     private bool isLoadingAchievements = true;
     private bool isLoadingPlayers = true;
@@ -230,14 +233,17 @@
         Task<List<SteamAchievement>> achievementsTask = SteamAchievementService.GetGameAchievementsAsync(steamId, gameId);
         Task<List<Tuple<DateTime,int>>?> analyticsTask = BadluckAchievementsService.LoadGameTimeAnalytics(gameId, httpClient);
         Task<HttpResponseMessage> gameInfoTask = httpClient.GetAsync($"https://store.steampowered.com/api/appdetails?l=english&appids={id}");
+        Task<HttpResponseMessage> reviewsTask = httpClient.GetAsync($"https://store.steampowered.com/appreviews/{id}?json=1");
 
-        await Task.WhenAll(achievementsTask, analyticsTask, gameInfoTask);
+        await Task.WhenAll(achievementsTask, analyticsTask, gameInfoTask, reviewsTask);
 
         achievements = achievementsTask.Result;
         players = analyticsTask.Result;
 
         var json = await gameInfoTask.Result.Content.ReadAsStringAsync();
-        analytics = (JObject)JObject.Parse(json)[id]["data"];
+        analytics = (JObject)JObject.Parse(json)[id]!["data"]!;
+        json = await reviewsTask.Result.Content.ReadAsStringAsync();
+        reviews = (JObject)JObject.Parse(json);
 
         Console.WriteLine(achievements.Count());
 

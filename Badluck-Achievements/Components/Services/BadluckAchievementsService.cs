@@ -88,7 +88,8 @@ namespace Components.Services_Achievements.Components
                         name = x.Value<string>("name") ?? "Unknown",
                         logo = x.Value<string>("logo") ?? "default.png",
                         achievmentTask = httpClient.GetAsync("http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?format=json&gameid=" + appID),
-                        playerCountTask = _steamService.GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID))
+                        playerCountTask = _steamService.GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID)),
+                        appId = uint.Parse(appID)
                     };
 
                 }
@@ -114,7 +115,8 @@ namespace Components.Services_Achievements.Components
                         r.name,
                         r.logo,
                         achievementsCount,
-                        playersCount));
+                        playersCount,
+                        r.appId));
                 }
 
                 return popularGames;

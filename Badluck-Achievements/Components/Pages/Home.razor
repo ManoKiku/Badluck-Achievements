@@ -42,18 +42,20 @@
             <h2><i class="fas fa-fire"></i> Popular Games</h2>
             @foreach (var item in popularGames)
             {
-                <div class="games-grid">
-                    <div class="game-card">
-                        <img class="game-banner" src="@item.img" alt="Game Banner">
-                        <div class="game-overlay">
-                            <div class="game-title"> @item.name</div>
-                            <div class="game-stats">
-                                <span><i class="fas fa-users">  @FormatNumberToK((uint)@item.playersCount)</i></span>
-                                <span><i class="fas fa-medal">@item.achievementsCount</i></span>
+                <a href="/game?id=@item.appID">
+                    <div class="games-grid">
+                        <div class="game-card">
+                            <img class="game-banner" src="@item.img" alt="Game Banner">
+                            <div class="game-overlay">
+                                <div class="game-title"> @item.name</div>
+                                <div class="game-stats">
+                                    <span><i class="fas fa-users">  @FormatNumberToK((uint)@item.playersCount)</i></span>
+                                    <span><i class="fas fa-medal">@item.achievementsCount</i></span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             }
         </section>
     }
