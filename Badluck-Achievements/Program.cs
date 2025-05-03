@@ -14,7 +14,7 @@ builder.Services.AddMemoryCache();
 
 SteamAchievementService steamAchievementService = new SteamAchievementService(builder.Configuration["ApiKeys:SteamApiKey"]!);
 builder.Services.AddSingleton(steamAchievementService).
-    AddSingleton(new BadluckAchievementsService(steamAchievementService, builder.Configuration["ApiKeys:SteamApiKey"]!, builder.Configuration["ApiKeys:NewsApiKey"]!));
+    AddSingleton(new BadluckAchievementsService(builder.Environment, steamAchievementService, builder.Configuration["ApiKeys:SteamApiKey"]!, builder.Configuration["ApiKeys:NewsApiKey"]!));
 
 builder.Services.AddAuthentication(options =>
 {

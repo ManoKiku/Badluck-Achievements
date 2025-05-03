@@ -1,0 +1,156 @@
+﻿
+.game-search-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    gap: 2rem;
+}
+
+.filters-container {
+    width: 280px;
+    background: var(--dark-gray);
+    padding: 1.5rem;
+    border-radius: 10px;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.main-content {
+    flex: 1;
+    max-width: 1200px;
+    max-height: 730px;
+    overflow-y: auto;
+    padding-left: 2rem;
+}
+
+.search-bar {
+    background: var(--dark-gray);
+    border: 2px solid var(--main-blue);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+}
+
+
+.tags-dropdown {
+    background: var(--dark-gray);
+    border: 2px solid var(--main-blue);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+    width: 100%;
+    min-height: 150px;
+}
+
+.category-label {
+    font-size: 16px;
+}
+
+.price-range {
+    background: var(--dark-gray);
+    border-radius: 8px;
+    padding: 0.5rem 0.3rem 0rem 0.3rem;
+}
+
+.price-input-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.price-input {
+    border: 1px solid var(--main-blue);
+    padding: 0.5rem;
+    border-radius: 5px;
+    width: 120px;
+}
+
+.any-price-label {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--main-blue);
+}
+
+.apply-button {
+    background: var(--main-blue);
+    color: var(--dark-blue);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: all 0.1s ease;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.apply-button:hover {
+    opacity: .8;
+}
+
+.apply-button:active {
+    transform: translateY(2px);
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+    justify-content: center;
+}
+
+.game-card {
+    background: var(--dark-gray);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-2px);
+}
+
+.game-logo {
+    width: 100%;
+    height: 50px;
+    object-fit: cover;
+    border-bottom: 2px solid var(--main-blue);
+}
+
+.game-name {
+    padding: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.text-main-blue {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 992px) {
+    .game-search-container {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .filters-container {
+        width: 100%;
+        position: static;
+    }
+
+    .main-content {
+        padding-left: 0;
+    }
+
+    .price-input-group {
+        flex-direction: column;
+    }
+}

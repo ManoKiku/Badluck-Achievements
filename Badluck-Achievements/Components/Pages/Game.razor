@@ -39,20 +39,20 @@
             <div class="stats-grid">
                 <div class="stat-box" style="background-color: #2a2a2a">
                     <div class="stat-value">
-                        ⭐ @((int)(reviews["query_summary"].Value<uint>("total_positive") / reviews["query_summary"].Value<double>("total_reviews") * 100))%
+                        <i class="fa-solid fa-star"></i> @((int)(reviews["query_summary"].Value<uint>("total_positive") / reviews["query_summary"].Value<double>("total_reviews") * 100))%
                     </div>
                     <div class="stat-label">Positive Reviews</div>
                 </div>
                 <div class="stat-box" style="background-color: #2a2a2a">
-                    <div class="stat-value">👤 @(players.LastOrDefault().Item2)</div>
+                    <div class="stat-value"><i class="fa-solid fa-users"></i> @(players.LastOrDefault().Item2)</div>
                     <div class="stat-label">Current Players</div>
                 </div>
                 <div class="stat-box" style="background-color: #2a2a2a">
-                    <div class="stat-value">🏆 @(analytics.ContainsKey("achievements") ? analytics["achievements"].Value<string>("total") : 0)</div>
+                    <div class="stat-value"><i class="fa-solid fa-trophy"></i> @(analytics.ContainsKey("achievements") ? analytics["achievements"].Value<string>("total") : 0)</div>
                     <div class="stat-label">Achievements</div>
                 </div>
                 <div class="stat-box" style="background-color: #2a2a2a">
-                    <div class="stat-value">🌐 @(analytics.Value<string>("supported_languages").Count(x => x == ',') + 1)</div>
+                    <div class="stat-value"><i class="fa-solid fa-globe"></i> @(analytics.Value<string>("supported_languages").Count(x => x == ',') + 1)</div>
                     <div class="stat-label">Supported Languages</div>
                 </div>
 

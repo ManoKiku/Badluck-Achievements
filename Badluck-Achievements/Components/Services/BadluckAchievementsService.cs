@@ -14,18 +14,27 @@ namespace Components.Services_Achievements.Components
 {
     public class BadluckAchievementsService
     {
-        private readonly SteamAchievementService _steamService;
+		private readonly IWebHostEnvironment _hostingEnvironment;
+		private readonly SteamAchievementService _steamService;
+        public readonly List<Tuple<uint, string>> tags;
 
         private string steamApiKey;
         private string newsApiKey;
 
 
-        public BadluckAchievementsService(SteamAchievementService steamService, string steamApiKey, string newsApiKey) 
+        public BadluckAchievementsService(IWebHostEnvironment webHostEnvironment, SteamAchievementService steamService, string steamApiKey, string newsApiKey) 
         {
+            _hostingEnvironment = webHostEnvironment;
             _steamService = steamService;
             this.steamApiKey = steamApiKey;
             this.newsApiKey = newsApiKey;
-        }
+
+			string tagsPath = Path.Combine(_hostingEnvironment.WebRootPath, "data", "tags.json");
+            string json = File.ReadAllText(tagsPath);
+			var parsed = JArray.Parse(json);
+
+            tags = parsed.Select(x => new Tuple<uint, string>(x.Value<uint>("id"), x.Value<string>("name")!)).ToList();
+		}
 
         public async Task<List<Tuple<DateTime, int>>?> LoadGameTimeAnalytics(uint steamId, HttpClient? httpClient = null)
         {

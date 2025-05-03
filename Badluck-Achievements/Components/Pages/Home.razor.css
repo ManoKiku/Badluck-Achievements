@@ -38,7 +38,7 @@ h2::after {
     left: 0;
     width: 60px;
     height: 3px;
-    background: linear-gradient(90deg, #ff8a00, #e52e71);
+    background: linear-gradient(90deg, #838383, #2a2a2a);
 }
 
 .news-card {
@@ -51,7 +51,16 @@ h2::after {
 }
 
 .news-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-2px);
+}
+
+.news-card a  {
+    color: white;
+    transition: color 150ms;
+}
+
+.news-card a:hover {
+    color: gray;
 }
 
 .game-stats {
@@ -118,7 +127,7 @@ h2::after {
 }
 
 .achievement-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-2px);
 }
 
 .achievement-icon {

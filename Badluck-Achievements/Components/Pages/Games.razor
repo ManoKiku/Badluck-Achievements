@@ -1,0 +1,86 @@
+﻿@page "/Games"
+@using global::Components.Services_Achievements.Components
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+@inject BadluckAchievementsService BadluckAchievementsService
+@inject SteamAchievementService SteamAchievementService
+@inject IJSRuntime JSRuntime
+
+<div class="game-search-container">
+    <div class="filters-container">
+        <h4 class="text-main-blue mb-4">Search Filters</h4>
+
+        <input type="text" class="search-bar" placeholder="Search games...">
+
+        <div class="filter-section mb-4">
+            <h5 class="text-main-blue mb-3">Categories</h5>
+            <div class="categories-container">
+                <div class="row">
+                    <div class="col-md-12" style="height: 150px;overflow-y: auto;">
+                        @foreach(var i in BadluckAchievementsService.tags)
+                        {
+                            <div class="category-item">
+                                <input type="checkbox" class="category-checkbox" data-id="@i.Item1">
+                                <label class="category-label">@i.Item2</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="price-range">
+            <h5 class="text-main-blue mb-3">Price Range</h5>
+            <input type="range" class="form-range" id="priceSlider" min="0" max="11" step="1" value="11">
+            <p class="price-display text-main-blue mt-2" id="priceDisplay">Any price</p>
+        </div>
+
+        <button class="apply-button btn mt-4">Apply Filters</button>
+    </div>
+
+    <div class="main-content">
+        <div class="game-grid">
+            <div class="game-card">
+                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
+                <div class="game-name">Game Title 1</div>
+            </div>
+            <div class="game-card">
+                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
+                <div class="game-name">Game Title 2</div>
+            </div>
+            <div class="game-card">
+                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
+                <div class="game-name">Game Title 3</div>
+            </div>
+            <div class="game-card">
+                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
+                <div class="game-name">Game Title 4</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const priceSlider = document.getElementById('priceSlider');
+    const priceDisplay = document.getElementById('priceDisplay');
+
+    priceSlider.addEventListener('input', function () {
+        const value = parseInt(this.value);
+        if (value === 0) {
+            priceDisplay.textContent = 'Free';
+        }
+        else if (value === 11) {
+            priceDisplay.textContent = 'Any price';
+        } 
+        else {
+            const price = value * 5;
+            priceDisplay.textContent = `$${price}`;
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+
+}
