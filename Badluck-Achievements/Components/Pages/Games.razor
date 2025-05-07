@@ -1,16 +1,18 @@
 ﻿@page "/Games"
+@using Badluck_Achievements.Components.Models
 @using global::Components.Services_Achievements.Components
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory HttpClientFactory
 @inject BadluckAchievementsService BadluckAchievementsService
 @inject SteamAchievementService SteamAchievementService
 @inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
 <div class="game-search-container">
     <div class="filters-container">
         <h4 class="text-main-blue mb-4">Search Filters</h4>
 
-        <input type="text" class="search-bar" placeholder="Search games...">
+        <input type="text" class="search-bar" placeholder="Search games..." @bind="searchQuery">
 
         <div class="filter-section mb-4">
             <h5 class="text-main-blue mb-3">Categories</h5>
@@ -20,7 +22,7 @@
                         @foreach(var i in BadluckAchievementsService.tags)
                         {
                             <div class="category-item">
-                                <input type="checkbox" class="category-checkbox" data-id="@i.Item1">
+                                <input type="checkbox" class="category-checkbox" data-id="@i.Item1" @oninput="() => OnTagInput(i.Item1)">
                                 <label class="category-label">@i.Item2</label>
                             </div>
                         }
@@ -31,56 +33,119 @@
 
         <div class="price-range">
             <h5 class="text-main-blue mb-3">Price Range</h5>
-            <input type="range" class="form-range" id="priceSlider" min="0" max="11" step="1" value="11">
+            <input type="range" class="form-range" id="priceSlider" min="0" max="11" step="1" @onchange="OnChangePrice">
             <p class="price-display text-main-blue mt-2" id="priceDisplay">Any price</p>
         </div>
 
-        <button class="apply-button btn mt-4">Apply Filters</button>
+        <button class="apply-button btn mt-4" @onclick="() => LoadGames()">Apply Filters</button>
     </div>
 
     <div class="main-content">
-        <div class="game-grid">
-            <div class="game-card">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
-                <div class="game-name">Game Title 1</div>
+        @if (!isLoadingGames && games != null)
+        {
+            <div class="game-grid">
+                @foreach (var i in games)
+                {
+                <a href="/game?id=@i.appID">
+                    <div class="user-game-card">
+                        <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/@i.appID/header.jpg" alt="Game Banner" class="game-banner" loading="lazy">
+                        <div class="game-overlay">
+                            <div class="game-title">@i.name</div>
+                        </div>
+                    </div>
+                </a>
+                }
             </div>
-            <div class="game-card">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
-                <div class="game-name">Game Title 2</div>
-            </div>
-            <div class="game-card">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
-                <div class="game-name">Game Title 3</div>
-            </div>
-            <div class="game-card">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2663530/9339b6c798028ab6f1fdcf3033c159263524b185/header_alt_assets_0.jpg?t=1745447171" alt="Game Logo" class="game-logo">
-                <div class="game-name">Game Title 4</div>
-            </div>
-        </div>
+        }
     </div>
 </div>
 
 <script>
-    const priceSlider = document.getElementById('priceSlider');
-    const priceDisplay = document.getElementById('priceDisplay');
+    function setListenerToRange() {
+        const priceSlider = document.getElementById('priceSlider');
 
-    priceSlider.addEventListener('input', function () {
-        const value = parseInt(this.value);
-        if (value === 0) {
-            priceDisplay.textContent = 'Free';
-        }
-        else if (value === 11) {
-            priceDisplay.textContent = 'Any price';
-        } 
-        else {
-            const price = value * 5;
-            priceDisplay.textContent = `$${price}`;
-        }
-    });
+        const priceDisplay = document.getElementById('priceDisplay');
+
+        priceSlider.addEventListener('input', function () {
+            const value = parseInt(this.value);
+            if (value === 0) {
+                priceDisplay.textContent = 'Free';
+            }
+            else if (value === 11) {
+                priceDisplay.textContent = 'Any price';
+            }
+            else {
+                const price = value * 5;
+                priceDisplay.textContent = `$${price}`;
+            }
+        });
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 @code {
+    private string searchQuery = string.Empty;
+    private uint price { get; set; } = 11;
 
+    private bool isLoadingGames = true;
+    private List<SteamGame>? games = null;
+    private List<uint> tags = new List<uint>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGames();
+    }
+
+    private async Task LoadGames()
+    {
+        try
+        {
+            HttpClient httpClient = HttpClientFactory.CreateClient();
+            var gamesTask = BadluckAchievementsService.LoadGamesAsync(
+                48, 
+                tags.Count == 0 ? null : tags, 
+                null, 
+                searchQuery == string.Empty ? null : searchQuery, 
+                price == 11 ? null : price,
+                false, 
+                false, 
+                httpClient
+            );
+
+            await Task.WhenAll(gamesTask);
+            games = gamesTask.Result;
+            isLoadingGames = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private void OnTagInput(uint key)
+    {
+        if(tags.IndexOf(key) == -1)
+        {
+            tags.Add(key);
+        }
+        else
+        {
+            tags.Remove(key);
+        }
+    }
+
+    private void OnChangePrice(ChangeEventArgs e)
+    {
+        price = uint.Parse(e.Value.ToString()) * 5;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(!firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setListenerToRange");
+        }
+    }
 }

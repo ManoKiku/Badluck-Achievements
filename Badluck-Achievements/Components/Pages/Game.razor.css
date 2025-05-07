@@ -130,6 +130,7 @@
     background: #333;
     border-radius: 8px;
     height: 130px;
+    border-left: 4px solid var(--main-blue);
 }
 
 .achievement-icon {

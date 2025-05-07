@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Badluck_Achievements.Components.Models
+@using System.Globalization
 @using global::Components.Services_Achievements.Components
 @using System.Text;
 
@@ -25,7 +26,7 @@
                     <h3><a href="@item.newsUrl" target="_blank">@item.topic</a></h3>
                     <p>@item.description</p>
                     <div class="news-meta">
-                        <span><i class="far fa-calendar"></i> @item.time?.ToString("yyyy MMM dd")</span>
+                        <span><i class="far fa-calendar"></i> @item.time?.ToString("yyyy MMM dd", CultureInfo.InvariantCulture)</span>
                     </div>
                 </div>
             }
@@ -135,7 +136,7 @@
         try
         {
             HttpClient httpClient = HttpClientFactory.CreateClient();
-            var popularGamesTask = BadluckAchievementsService.LoadPopularGamesAsync(11, httpClient);
+            var popularGamesTask = BadluckAchievementsService.LoadGamesAsync(11, httpClient : httpClient);
             var newsTask = BadluckAchievementsService.LoadGamingNewsAsync(httpClient);
             Task<List<SteamAchievement>?>? achievementsTask = null;
             Task<UserStats?>? statsTask = null;

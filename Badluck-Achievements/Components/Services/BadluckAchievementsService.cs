@@ -62,7 +62,7 @@ namespace Components.Services_Achievements.Components
                 .ToList();
         }
 
-        public async Task<List<SteamGame>?> LoadPopularGamesAsync(int amount = 8, HttpClient? httpClient = null)
+        public async Task<List<SteamGame>?> LoadGamesAsync(int amount = 8, List<uint>? tags = null, List<string>? os = null, string? query = null, uint? price = null, bool withAchievements = true, bool withPlayers = true, HttpClient? httpClient = null)
         {
             if (httpClient == null)
             {
@@ -71,7 +71,33 @@ namespace Components.Services_Achievements.Components
 
             try
             {
-                var response = await httpClient.GetAsync("https://store.steampowered.com/search/results?category1=998&json=1");
+                string baseUrl = "https://store.steampowered.com/search/results?category1=998&json=1";
+
+                if(tags != null)
+                {
+                    baseUrl += $"&tags={string.Join(",", tags)}";
+                }
+                if(os != null)
+                {
+                    baseUrl += $"&os={string.Join(",", os)}";
+                }
+                if(query != null)
+                {
+                    baseUrl += $"&term={query}";
+                }
+                if(price != null)
+                {
+                    if(price <= 0)
+                    {
+                        baseUrl += "&maxprice=free";
+                    }
+                    else
+                    {
+                        baseUrl += $"&maxprice={price}";
+                    }
+                }
+
+                var response = await httpClient.GetAsync(baseUrl);
 
                 List<SteamGame> popularGames = new List<SteamGame>();
 
@@ -96,29 +122,41 @@ namespace Components.Services_Achievements.Components
                     {
                         name = x.Value<string>("name") ?? "Unknown",
                         logo = x.Value<string>("logo") ?? "default.png",
-                        achievmentTask = httpClient.GetAsync("http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?format=json&gameid=" + appID),
-                        playerCountTask = _steamService.GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID)),
+                        achievmentTask = withAchievements ?
+                            httpClient.GetAsync("http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?format=json&ignore_preferences=1&gameid=" + appID) :
+                            null,
+                        playerCountTask = withPlayers ?
+                            _steamService.GetNumberOfCurrentPlayersForGameAsync(uint.Parse(appID)) :
+                            null,
                         appId = uint.Parse(appID)
                     };
 
                 }
                     ).ToList();
 
-                await Task.WhenAll(requests.Select(x => x.achievmentTask));
-                await Task.WhenAll(requests.Select(x => x.playerCountTask));
+                if(withAchievements)
+                    await Task.WhenAll(requests.Select(x => x.achievmentTask));
+
+                if(withPlayers)
+                    await Task.WhenAll(requests.Select(x => x.playerCountTask));
 
                 foreach (var r in requests)
                 {
-                    var s = await r.achievmentTask.Result.Content.ReadAsStringAsync();
-                    var parsed = JObject.Parse(s);
-
+                    string s = string.Empty;
+                    JObject parsed = new JObject();
+                    if (withAchievements)
+                    {
+                        s = await r.achievmentTask.Result.Content.ReadAsStringAsync();
+                        parsed = JObject.Parse(s);
+                    }
+                        
                     uint achievementsCount = 0;
                     if (parsed.HasValues)
                     {
                         achievementsCount = (uint)parsed["achievementpercentages"]!["achievements"]!.Count();
                     }
 
-                    uint playersCount = r.playerCountTask.Result;
+                    uint playersCount = withPlayers ? r.playerCountTask.Result : 0;
 
                     popularGames.Add(new SteamGame(
                         r.name,
@@ -161,7 +199,7 @@ namespace Components.Services_Achievements.Components
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = JObject.Parse(json);
 
-                List<GamingNews> news = parsed["articles"]?
+                List<GamingNews> news = parsed["articles"]!
                     .Select(article => new GamingNews(
                         article.Value<string>("title") ?? "No title",
                         article.Value<string>("description") ?? "No description",

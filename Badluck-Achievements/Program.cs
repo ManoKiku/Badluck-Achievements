@@ -3,6 +3,7 @@ using Badluck_Achievements.Components;
 using Badluck_Achievements.Components.Pages;
 using Components.Services_Achievements.Components;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,5 +61,6 @@ app.UseAntiforgery();
 app.MapControllers();
 app.MapFallbackToFile("/Routes.razor");
 
+Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
 app.Run();

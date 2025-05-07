@@ -39,7 +39,7 @@
             <div class="stats-grid">
                 <div class="stat-box" style="background-color: #2a2a2a">
                     <div class="stat-value">
-                        <i class="fa-solid fa-star"></i> @((int)(reviews["query_summary"].Value<uint>("total_positive") / reviews["query_summary"].Value<double>("total_reviews") * 100))%
+                        <i class="fa-solid fa-star"></i> @((uint)(reviews["query_summary"].Value<uint>("total_positive") / reviews["query_summary"].Value<double>("total_reviews") * 100))%
                     </div>
                     <div class="stat-label">Positive Reviews</div>
                 </div>
@@ -233,7 +233,7 @@
         Task<List<SteamAchievement>> achievementsTask = SteamAchievementService.GetGameAchievementsAsync(steamId, gameId);
         Task<List<Tuple<DateTime,int>>?> analyticsTask = BadluckAchievementsService.LoadGameTimeAnalytics(gameId, httpClient);
         Task<HttpResponseMessage> gameInfoTask = httpClient.GetAsync($"https://store.steampowered.com/api/appdetails?l=english&appids={id}");
-        Task<HttpResponseMessage> reviewsTask = httpClient.GetAsync($"https://store.steampowered.com/appreviews/{id}?json=1");
+        Task<HttpResponseMessage> reviewsTask = httpClient.GetAsync($"https://store.steampowered.com/appreviews/{id}?json=1&language=all");
 
         await Task.WhenAll(achievementsTask, analyticsTask, gameInfoTask, reviewsTask);
 
