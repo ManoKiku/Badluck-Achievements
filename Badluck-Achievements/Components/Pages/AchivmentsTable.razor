@@ -4,7 +4,7 @@
 }
 else
 {
-    <table border="2" align="center">
+    <table align="center">
         <thead align="center">
             <tr>
                 <th>Achivment</th>
@@ -80,7 +80,7 @@ else
         }
 
         
-        foreach (var i in parsed["achievementpercentages"]["achievements"])
+        foreach (var i in parsed["achievementpercentages"]!["achievements"]!)
         {
             achivments.Add(new SteamAchivment(i.Value<string>("name")!, float.Parse(i.Value<string>("percent")!)));
         }

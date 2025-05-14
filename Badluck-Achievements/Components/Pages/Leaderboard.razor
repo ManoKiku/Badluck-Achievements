@@ -1,0 +1,90 @@
+﻿@using Badluck_Achievements.Components.Data
+@using Badluck_Achievements.Components.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext AppDbContext
+
+@page "/Leaderboard"
+
+<PageTitle>Badluck Achievements - Leaderboard</PageTitle>
+
+<div class="container">
+    @if(isLoading)
+    {
+        <span>Content is loading</span>
+    }
+    else
+    {
+        @if (sesion.IsAuthenticated)
+        {
+            <div class="user-card">
+                <div class="user-header">
+                    <img src="@sesion.AvatarUrl" alt="Avatar" class="user-avatar">
+                    <div class="user-info">
+                        <div class="username">@sesion.NameIdentifier</div>
+                        <div class="user-rank">#@position in rating</div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <p style="display:block; color: white; font-weight: bold;">@user.UserAchievements.Count achievements</p>
+                        <p>Better than @((leaders.Count - position + 1) / leaders.Count * 100)% of users</p>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: @((leaders.Count - position + 1) / leaders.Count * 100)%"></div>
+                    </div>
+                </div>
+
+                <a href="/User?id=@user.SteamId" class="profile-link">To the profile →</a>
+            </div>
+        }
+
+        <div class="leaderboard">
+            @for(int i = 0; i < leaders.Count; ++i)
+            {
+                <a href="User?id=@leaders[i].User.SteamId" style="text-decoration: none;">
+                    <div class="leader-item">
+                        <div class="position">@(i + 1)</div>
+                        <img src="@leaders[i].User.IconPath" alt="Avatar" class="avatar">
+                        <div class="username">@leaders[i].User.Username</div>
+                        <div class="points">@((int)leaders[i].Score) <span class="label">points</span></div>
+                        <div class="badges">@leaders[i].User.UserAchievements.Count <span class="label">ach.</span></div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+
+@code {
+    List<LeaderBoard>? leaders = null;
+    Data.User? user = null;
+    int position = 0;
+
+    [CascadingParameter]
+    public Sesion? sesion { get; set; }
+
+    bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        leaders = AppDbContext.LeaderBoards
+            .Include(x => x.User)
+            .Include(x => x.User.UserAchievements)
+            .OrderBy(x => x.Score)
+            .ToList();
+
+        
+
+        if(sesion.IsAuthenticated)
+        {
+            ulong steamId = Convert.ToUInt64(sesion.SteamId);
+            user = leaders.Select(x => x.User).First(x => x.SteamId == steamId);
+            position = leaders.Select(x => x.User).ToList().IndexOf(user) + 1;
+        }
+
+        isLoading = false;
+    }
+
+}

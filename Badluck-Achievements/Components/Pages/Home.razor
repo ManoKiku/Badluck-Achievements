@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Badluck_Achievements.Components.Models
 @using System.Globalization
+@using global::Components.Services
 @using global::Components.Services_Achievements.Components
 @using System.Text;
 
@@ -73,14 +74,14 @@
                 @foreach (var item in achievements)
                 {
                     <div class="achievement-card">
-                        <img src="@item.iconUrl" alt="Achievement Icon" class="achievement-icon">
+                        <img src="@item.IconUrl" alt="Achievement Icon" class="achievement-icon">
                         <div class="achievement-details">
-                            <div class="achievement-title">@item.name</div>
+                            <div class="achievement-title">@item.Name</div>
                             <div class="achievement-meta">
-                                <span>Rarity: @item.achievePercentage%</span>
+                                <span>Rarity: @item.AchievePercentage%</span>
                             </div>
                             <div class="achievement-progress">
-                                <div class="progress-bar" style="width: @item.achievePercentage%"></div>
+                                <div class="progress-bar" style="width: @item.AchievePercentage%"></div>
                             </div>
                         </div>
                     </div>
@@ -98,11 +99,11 @@
                 <h2><i class="fas fa-chart-line"></i> Your Stats</h2>
                 <div class="stat-item">
                     <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-                    <span class="stat-value">@stats.totalAchievements</span>
+                    <span class="stat-value">@stats.TotalAchievements</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label"><i class="fas fa-gamepad"></i> Total games</span>
-                    <span class="stat-value">@stats.totalGames</span>
+                    <span class="stat-value">@stats.TotalGames</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
@@ -141,15 +142,15 @@
             Task<List<SteamAchievement>?>? achievementsTask = null;
             Task<UserStats?>? statsTask = null;
 
-            if (sesion!.isAuthenticated)
+            if (sesion!.IsAuthenticated)
             {
-                var steamId = ulong.Parse(sesion.steamId);
+                var steamId = ulong.Parse(sesion.SteamId);
                 achievementsTask = BadluckAchievementsService.LoadLatestAchievements(steamId, httpClient);
                 statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
             }
 
             var tasks = new List<Task> { popularGamesTask, newsTask };
-            if (sesion!.isAuthenticated)
+            if (sesion!.IsAuthenticated)
             {
                 tasks.Add(achievementsTask);
                 tasks.Add(statsTask);
@@ -160,7 +161,7 @@
             popularGames = await popularGamesTask;
             news = await newsTask;
 
-            if (sesion.isAuthenticated)
+            if (sesion.IsAuthenticated)
             {
                 achievements = await achievementsTask;
                 stats = await statsTask;

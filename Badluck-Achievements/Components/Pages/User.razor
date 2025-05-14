@@ -1,6 +1,8 @@
-﻿@using Badluck_Achievements.Components.Models
+﻿@using Badluck_Achievements.Components.Data
+@using Badluck_Achievements.Components.Models
 @using Microsoft.AspNetCore.WebUtilities
 @using Steam.Models.SteamCommunity
+@using global::Components.Services
 @using global::Components.Services_Achievements.Components
 @using System.Diagnostics;
 @using Microsoft.JSInterop
@@ -10,6 +12,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject BadluckAchievementsService BadluckAchievementsService
 @inject SteamAchievementService SteamAchievementService
+@inject AppDbContext AppDbContext
 @inject IJSRuntime JSRuntime
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
@@ -52,11 +55,11 @@
 							<div class="profile-stats">
 								<div class="stat-item">
 									<span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
-									<span class="stat-value">@stats.totalGames</span>
+									<span class="stat-value">@stats.TotalGames</span>
 								</div>
 								<div class="stat-item">
 									<span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-									<span class="stat-value">@stats.totalAchievements</span>
+									<span class="stat-value">@stats.TotalAchievements</span>
 								</div>
 								<div class="stat-item">
 									<span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
@@ -64,7 +67,7 @@
 								</div>
 								<div class="stat-item">
 									<span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
-									<span class="stat-value">@((int)stats.hoursPlayed) hrs</span>
+									<span class="stat-value">@((int)stats.HoursPlayed) hrs</span>
 								</div>
 							</div>
 						}
@@ -79,11 +82,11 @@
 								{
 									<p><em>No achievements available.</em></p>
 								}
-								else if (stats.achievements.Any())
+								else if (stats.Achievements.Any())
 								{
-									foreach (var i in stats.achievements.OrderBy(x => x.achievePercentage).Take(16))
+									foreach (var i in stats.Achievements.OrderBy(x => x.AchievePercentage).Take(16))
 									{
-										<img src="@i.iconUrl" alt="@i.name" class="badge-icon" title="@i.achievePercentage%">
+										<img src="@i.IconUrl" alt="@i.Name" class="badge-icon" title="@i.AchievePercentage%">
 									}
 								}
 							</div>
@@ -124,12 +127,12 @@
 											{
 												<div class="game-progress">
 													<div class="progress-bar"
-															style="width: @((int)(i.completedAchievements / (double)i.achievementsCount * 100))%"></div>
-													<span> @((int)(i.completedAchievements / (double)i.achievementsCount * 100))% (@i.completedAchievements/@i.achievementsCount)</span>
+															style="width: @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))%"></div>
+													<span> @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))% (@i.CompletedAchievements/@i.achievementsCount)</span>
 												</div>
 
 											}
-											<div class="game-playtime">@((int)i.playtimeForever) hrs</div>
+											<div class="game-playtime">@((int)i.PlaytimeForever) hrs</div>
 										</div>
 									</div>
 								</a>
@@ -251,14 +254,13 @@
 		model = modelTask.Result; 
 		stats = statsTask.Result;
 
-
 		var buff = await SteamAchievementService.GetPlayerGames(steamId, stats);
 		playerGames = buff.Item1;
 
 		if(playerGames != null)
 		{
 			playerGames = playerGames.OrderByDescending(x => x.achievementsCount)
-						.OrderByDescending(x => x.completedAchievements).ToList();
+						.OrderByDescending(x => x.CompletedAchievements).ToList();
 		}
 
 		gamesToShow = playerGames;
@@ -274,12 +276,12 @@
 		if (!firstRender && !isRendered && stats is not null)
 		{
 			isRendered = true;
-			await JSRuntime.InvokeVoidAsync("renderAchievementsFlowChart", stats.completedAchievements, stats.totalAchievements - stats.completedAchievements);
+			await JSRuntime.InvokeVoidAsync("renderAchievementsFlowChart", stats.CompletedAchievements, stats.TotalAchievements - stats.CompletedAchievements);
 
-			var games = stats.games.Where(x => x.totalAhievements != 0).ToList();
+			var games = stats.Games.Where(x => x.TotalAhievements != 0).ToList();
 			int allAchievementsGames = games.Count();
-			int completedGames = games.Count(x => x.completedAchievements == x.totalAhievements);
-			int inProgressGames = games.Count(x => x.completedAchievements != x.totalAhievements && x.completedAchievements != 0);
+			int completedGames = games.Count(x => x.CompletedAchievements == x.TotalAhievements);
+			int inProgressGames = games.Count(x => x.CompletedAchievements != x.TotalAhievements && x.CompletedAchievements != 0);
 
 			await JSRuntime.InvokeVoidAsync("renderGamesFlowChart", completedGames, inProgressGames,
 				allAchievementsGames - completedGames - inProgressGames);
@@ -301,19 +303,19 @@
 			case "100% Completed":
 				gamesToShow = playerGames
 					.Where(x => x.achievementsCount != 0 &&
-								x.achievementsCount == x.completedAchievements)
+								x.achievementsCount == x.CompletedAchievements)
 					.ToList();
 				break;
 			case "In Progress":
 				gamesToShow = playerGames
 					.Where(x => x.achievementsCount != 0 &&
-								x.completedAchievements > 0 &&
-								x.achievementsCount != x.completedAchievements)
+								x.CompletedAchievements > 0 &&
+								x.achievementsCount != x.CompletedAchievements)
 					.ToList();
 				break;
 			case "Not Played":
 				gamesToShow = playerGames
-					.Where(x => x.playtimeForever == 0)
+					.Where(x => x.PlaytimeForever == 0)
 					.ToList();
 				break;
 			default:

@@ -2,19 +2,21 @@
 {
     public class SteamAchievement
     {
+        // Achievement api name
+        public string ApiName { get; set; } = string.Empty;
         // Achievment name
-        public string name { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         // Is achievment achived
-        public bool isAchieved { get; set; } = false;
+        public bool IsAchieved { get; set; } = false;
         // Global achieve percentage
-        public double achievePercentage { get; set; } = 0;
+        public double AchievePercentage { get; set; } = 0;
         // Unlock time of achievement
-        public DateTime? unlockTime { get; set; } = DateTime.MinValue;
+        public DateTime? UnlockTime { get; set; } = DateTime.MinValue;
         // Url of achievement icon
-        public string? iconUrl { get; set; } = string.Empty;
+        public string? IconUrl { get; set; } = string.Empty;
         // App id
-        public ulong appId { get; set; } = 0;
+        public ulong AppId { get; set; } = 0;
         // achievement bit 
-        public uint bit { get; set; } = 0;
+        public uint Bit { get; set; } = 0;
     }
 }

@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using Steam.Models.SteamCommunity
 @using System.Text.RegularExpressions
+@using global::Components.Services
 @using global::Components.Services_Achievements.Components
 @using Microsoft.JSInterop
 
@@ -100,21 +101,21 @@
             <div class="achievements-section" style="background-color: #1a1a1a">
                 <h2>Achievements (@achievements.Count())</h2>
                 <div class="achievements-grid">
-                    @foreach (var i in achievements.OrderByDescending(x => x.achievePercentage))
+                    @foreach (var i in achievements.OrderByDescending(x => x.AchievePercentage))
                     {
                         <div class="achievement-item">
-                            <img src="@i.iconUrl"
+                            <img src="@i.IconUrl"
                             class="achievement-icon" alt="Achievement">
                             <div class="achievement-info">
-                                <h3 style="font-size: 1rem;">@i.name</h3>
+                                <h3 style="font-size: 1rem;">@i.Name</h3>
                                 <div class="progress-bar">
-                                    <div class="progress" style="width: @i.achievePercentage%"></div>
+                                    <div class="progress" style="width: @i.AchievePercentage%"></div>
                                 </div>
-                                <span>@i.achievePercentage% of players</span>
-                                @if(i.isAchieved)
+                                <span>@i.AchievePercentage% of players</span>
+                                @if(i.IsAchieved)
                                 {
                                     <br>
-                                    <span>Achieved at: @(i.unlockTime?.ToString("yyyy-MM-dd"))</span>
+                                    <span>Achieved at: @(i.UnlockTime?.ToString("yyyy-MM-dd"))</span>
                                 }
                             </div>
                         </div>
@@ -226,9 +227,8 @@
         ulong steamId = 76561198836147236;
         if(sesion is not null)
         {
-            ulong.TryParse(sesion.steamId, out steamId);
+            ulong.TryParse(sesion.SteamId, out steamId);
         }
-
 
         Task<List<SteamAchievement>> achievementsTask = SteamAchievementService.GetGameAchievementsAsync(steamId, gameId);
         Task<List<Tuple<DateTime,int>>?> analyticsTask = BadluckAchievementsService.LoadGameTimeAnalytics(gameId, httpClient);

@@ -2,28 +2,26 @@
 {
     public class GameInfo
     {
-        public ulong appId { get; set; } = 0;
-        public ulong completedAchievements { get; set; } = 0;
-        public ulong totalAhievements { get; set; } = 0;
+        public ulong AppId { get; set; } = 0;
+        public ulong CompletedAchievements { get; set; } = 0;
+        public ulong TotalAhievements { get; set; } = 0;
     }
 
     public class UserStats
     {
         // Count of achievements
-        public long totalAchievements { get; set; } = 0;
+        public long TotalAchievements { get; set; } = 0;
         // Count of games
-        public long totalGames { get; set; } = 0;
+        public long TotalGames { get; set; } = 0;
         // Percentage of perfect games
-        public double completedAchievements { get; set; } = 0;
+        public double CompletedAchievements { get; set; } = 0;
         // Hours playes
-        public double hoursPlayed { get; set; } = 0;
+        public double HoursPlayed { get; set; } = 0;
         // Rarest achievements
-        public List<SteamAchievement> achievements = new List<SteamAchievement>();
+        public List<SteamAchievement> Achievements = new List<SteamAchievement>();
         // Games
-        public List<GameInfo> games = new List<GameInfo>();
-        public double CalculateCompetionRate()
-        {
-            return completedAchievements / totalAchievements;
-        }
+        public List<GameInfo> Games = new List<GameInfo>();
+
+        public double CalculateCompetionRate() => CompletedAchievements / TotalAchievements;
     }
 }

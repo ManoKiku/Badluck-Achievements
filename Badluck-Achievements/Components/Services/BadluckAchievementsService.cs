@@ -1,14 +1,7 @@
 ﻿using Badluck_Achievements.Components.Models;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
-using System.Text;
-using SteamWebAPI2.Interfaces;
-using AngleSharp.Dom;
-using Steam.Models.SteamCommunity;
-using AngleSharp.Io;
-using Badluck_Achievements.Components;
-using System.Net.Http;
-using System.Linq;
+using Components.Services;
 
 namespace Components.Services_Achievements.Components
 {
@@ -51,7 +44,6 @@ namespace Components.Services_Achievements.Components
             }
 
             var json = await result.Content.ReadAsStringAsync();
-            Console.WriteLine(json);
             var parsed = JArray.Parse(json);
             return parsed
                 .Select(x=> new Tuple<DateTime, int>(DateTimeOffset.FromUnixTimeSeconds(x[0].Value<long>() / 1000).UtcDateTime, x[1]!.Value<int>()))
@@ -228,17 +220,17 @@ namespace Components.Services_Achievements.Components
                 List<SteamAchievement> achievements = new List<SteamAchievement>();
                 var stats = await _steamService.LoadUserStats(httpClient, steamId);
 
-                if(stats.completedAchievements == 0)
+                if(stats.CompletedAchievements == 0)
                 {
                     return null;
                 }
 
-                var games = stats.games.Where(x => x.completedAchievements != 0).ToList();
+                var games = stats.Games.Where(x => x.CompletedAchievements != 0).ToList();
 
-                ulong appId = games[random.Next(0, games.Count() - 1)].appId;
-                achievements = stats.achievements
-                    .Where(x => x.appId == appId)
-                    .OrderBy(x => x.achievePercentage)
+                ulong appId = games[random.Next(0, games.Count() - 1)].AppId;
+                achievements = stats.Achievements
+                    .Where(x => x.AppId == appId)
+                    .OrderBy(x => x.AchievePercentage)
                     .Take(5)
                     .ToList();
 

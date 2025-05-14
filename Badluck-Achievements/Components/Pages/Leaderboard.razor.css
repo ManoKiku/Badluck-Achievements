@@ -1,0 +1,163 @@
+﻿.leaderboard {
+    background: #2a2a2a;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    height: 600px;
+    overflow-y: auto;
+}
+
+.leader-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+    border-radius: 12px;
+}
+
+.leader-item:hover {
+    background: #3a3a3a;
+}
+
+.position {
+    font-weight: 600;
+    color: white;
+    width: 40px;
+    text-align: center;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 1rem;
+}
+
+
+.points, .badges {
+    font-weight: 600;
+    color: white;
+    margin-left: 1.5rem;
+}
+
+.label {
+    font-size: 0.8em;
+    color: #adb5bd;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.leader-item:last-child {
+    border-bottom: none;
+}
+
+.leader-item:nth-child(1) .position {
+    color: #ffd700;
+}
+
+.leader-item:nth-child(2) .position {
+    color: #c0c0c0;
+}
+
+.leader-item:nth-child(3) .position {
+    color: #cd7f32;
+}
+
+.container {
+    display: flex;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.user-card {
+    width: 400px;
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    align-self: flex-start;
+}
+
+.user-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid #f1f3f5;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.username {
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+    flex: 1;
+    font-weight: 500;
+}
+
+.user-rank {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.progress-container {
+    margin: 1.5rem 0;
+}
+
+.progress-header {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.progress-bar {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: #4a9eff;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.profile-link {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: #4a9eff;
+    font-size: 0.9em;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.profile-link:hover {
+    background: #3a3a3a;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 0 1rem;
+    }
+            
+    .user-card {
+        width: 100%;
+    }
+}

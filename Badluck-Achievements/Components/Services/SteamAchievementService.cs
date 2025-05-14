@@ -5,18 +5,13 @@ using Steam.Models;
 using Steam.Models.SteamCommunity;
 using Steam.Models.SteamPlayer;
 using SteamWebAPI2.Interfaces;
-using SteamWebAPI2.Mappings;
-using SteamWebAPI2.Models;
 using SteamWebAPI2.Utilities;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Net.Http;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 
-namespace Components.Services_Achievements.Components
+namespace Components.Services
 {
     public class SteamAchievementService
     {
@@ -90,7 +85,7 @@ namespace Components.Services_Achievements.Components
                 {
                     StringBuilder builder = new StringBuilder($"https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key={_steamApiKey}&steamid={steamId}&max_achievements=10000");
 
-                    for (int i = 0; i < x.Count(); ++i)
+                    for (int i = 0; i < x.Count; ++i)
                     {
                         builder.Append($"&appids[{i}]={x[i].AppId}");
                     }
@@ -117,11 +112,11 @@ namespace Components.Services_Achievements.Components
 
                     foreach (JObject i in parsed["response"]!["games"]!)
                     {
-                        stats.totalAchievements += i.Value<int>("total_achievements");
-                        stats.games.Add(new GameInfo
+                        stats.TotalAchievements += i.Value<int>("total_achievements");
+                        stats.Games.Add(new GameInfo
                         {
-                            appId = i.Value<ulong>("appid"),
-                            totalAhievements = i.Value<ulong>("total_achievements")
+                            AppId = i.Value<ulong>("appid"),
+                            TotalAhievements = i.Value<ulong>("total_achievements")
                         });
 
                         if (i is JObject obj && !obj.ContainsKey("achievements"))
@@ -129,26 +124,27 @@ namespace Components.Services_Achievements.Components
                             continue;
                         }
 
-                        stats.games.Last().completedAchievements = (ulong)i["achievements"]!.Count(); ;
+                        stats.Games.Last().CompletedAchievements = (ulong)i["achievements"]!.Count(); ;
 
-                        stats.completedAchievements += i["achievements"]!.Count();
+                        stats.CompletedAchievements += i["achievements"]!.Count();
 
                         foreach (JObject j in i["achievements"]!)
                         {
-                            stats.achievements.Add(new SteamAchievement
+                            stats.Achievements.Add(new SteamAchievement
                             {
-                                name = j.Value<string>("name")!,
-                                isAchieved = true,
-                                achievePercentage = double.Parse(j.Value<string>("player_percent_unlocked")),
-                                iconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{i["appid"]}/{j.Value<string>("icon")}",
-                                appId = i.Value<uint>("appid")
+                                Name = j.Value<string>("name")!,
+                                IsAchieved = true,
+                                AchievePercentage = double.Parse(j.Value<string>("player_percent_unlocked")),
+                                IconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{i["appid"]}/{j.Value<string>("icon")}",
+                                AppId = i.Value<uint>("appid"),
+                                Bit = j.Value<uint>("bit")
                             });
                         }
                     }
                 }
 
-                stats.totalGames = games.GameCount;
-                stats.hoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
+                stats.TotalGames = games.GameCount;
+                stats.HoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
 
                 return stats;
             }
@@ -167,21 +163,18 @@ namespace Components.Services_Achievements.Components
 
             var list = new List<List<OwnedGameModel?>>();
 
-            if (stats == null)
-            {
-                stats = await LoadUserStats(httpClient, steamId);
-            }
+            stats ??= await LoadUserStats(httpClient, steamId);
 
             return new Tuple<List<SteamPlayerGame>?, UserStats>(games.Select((g, i) => new SteamPlayerGame
             {
                 appID = g.AppId,
                 name = g.Name,
-                playtimeForever = g.PlaytimeForever.TotalHours,
-                playtime2Weeks = g.PlaytimeLastTwoWeeks?.TotalHours,
-                iconUrl = g.ImgIconUrl,
+                PlaytimeForever = g.PlaytimeForever.TotalHours,
+                Playtime2Weeks = g.PlaytimeLastTwoWeeks?.TotalHours,
+                IconUrl = g.ImgIconUrl,
                 img = $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{g.AppId}/header.jpg",
-                achievementsCount = stats.games.Find(x => x.appId == g.AppId).totalAhievements,
-                completedAchievements = stats.games.Find(x => x.appId == g.AppId).completedAchievements,
+                achievementsCount = stats.Games.Find(x => x.AppId == g.AppId).TotalAhievements,
+                CompletedAchievements = stats.Games.Find(x => x.AppId == g.AppId).CompletedAchievements,
             }).ToList(), stats);
         }
 
@@ -197,7 +190,7 @@ namespace Components.Services_Achievements.Components
                 try
                 {
                     var achievements = await GetGameAchievementsAsync(steamId, game.AppId);
-                    if (achievements.Any())
+                    if (achievements.Count == 0)
                     {
                         resultDict.TryAdd(game.AppId, achievements);
                     }
@@ -217,77 +210,75 @@ namespace Components.Services_Achievements.Components
             return result;
         }
 
-        public async Task<List<SteamAchievement>> GetGameAchievementsAsync(ulong steamUserId, uint appId)
+        public async Task<List<SteamAchievement>> GetGameAchievementsAsync(ulong steamUserId, uint appId, string language = "english", HttpClient? httpClient = null)
         {
             var steamUserStats = _steamFactory.CreateSteamWebInterface<SteamUserStats>();
 
             try
             {
+                if (httpClient == null)
+                    httpClient = new HttpClient();
                 Task<ISteamWebResponse<PlayerAchievementResultModel>> responseTask = steamUserStats.GetPlayerAchievementsAsync(appId, steamUserId, "english");
-                Task<ISteamWebResponse<SchemaForGameResultModel>> schemaTask = steamUserStats.GetSchemaForGameAsync(appId, "english");
-                Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> apiAchievementsTask = GetGlobalAchievementPercentagesForAppAsync(appId);
-                await Task.WhenAll(schemaTask, apiAchievementsTask);
+                var achievementsTask = httpClient.GetAsync($"https://api.steampowered.com/IPlayerService/GetGameAchievements/v1?key={_steamApiKey}&appid={appId}&language={language}");
 
+                await Task.WhenAll(achievementsTask);
                 ISteamWebResponse<PlayerAchievementResultModel>? response = null;
+                var responeAchievements = achievementsTask.Result;
 
                 try
                 {
                     response = await responseTask;
                 }
-                catch (Exception e)
+                catch
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("No achievements info");
                 }
 
-                var schema = schemaTask.Result;
-                Console.WriteLine("Achievements schema: " + schema.Data.AvailableGameStats.Achievements.Count);
-                var apiAchievements = apiAchievementsTask.Result;
-                Console.WriteLine("Api achievements: " + apiAchievements.Count);
+                string jsonAchievements = await responeAchievements.Content.ReadAsStringAsync();
+                Console.WriteLine(jsonAchievements);
 
-                IEnumerable<Task<SteamAchievement>> achievementTasks;
-
-                if (response is not null)
+                var achievements = JObject.Parse(jsonAchievements);
+                return achievements["response"]!["achievements"]!.Select(x =>
                 {
-                    achievementTasks = response.Data.Achievements
-                        .Select(async a =>
-                        {
-                            var schemaAchievement = schema.Data.AvailableGameStats?.Achievements?
-                                .ToDictionary(a => a.Name, a => a);
-                            SchemaGameAchievementModel sa;
-
-                            return new SteamAchievement
-                            {
-                                name = a.Name,
-                                isAchieved = a.Achieved == 1,
-                                unlockTime = a.UnlockTime.ToUnixTimeStamp() > 0 ? a.UnlockTime : null,
-                                iconUrl = schemaAchievement.TryGetValue(a.APIName, out sa) ? $"{sa.Icon}" : null,
-                                achievePercentage = apiAchievements.Where(x => x.Name == a.APIName).FirstOrDefault().Percent
-                            };
-                        });
-                }
-                else
-                {
-                    achievementTasks = schema.Data.AvailableGameStats.Achievements.Select(async a =>
+                    PlayerAchievementModel? achievement = null;
+                    if (response != null)
                     {
-                        return new SteamAchievement
+                        achievement =
+                            response.Data.Achievements.FirstOrDefault(a => a.APIName == x.Value<string>("internal_name")) ??
+                            new PlayerAchievementModel
+                            {
+                                APIName = x.Value<string>("internal_name"),
+                                Achieved = 0,
+                                UnlockTime = DateTime.MinValue
+                            };
+                    }
+
+                    achievement ??= new PlayerAchievementModel
                         {
-                            name = a.Name,
-                            isAchieved = false,
-                            unlockTime = null,
-                            iconUrl = a.Icon,
-                            achievePercentage = apiAchievements.Where(x => x.Name == a.Name).FirstOrDefault().Percent
+                            APIName = x.Value<string>("internal_name"),
+                            Achieved = 0,
+                            UnlockTime = DateTime.MinValue
                         };
-                    });
+
+                    return new SteamAchievement
+                    {
+                        ApiName = achievement.APIName,
+                        Name = x.Value<string>("localized_name"),
+                        IsAchieved = achievement.Achieved != 0,
+                        AchievePercentage = Convert.ToDouble(x.Value<string>("player_percent_unlocked")),
+                        UnlockTime = achievement.UnlockTime,
+                        IconUrl = $"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{appId}/{x.Value<string>("icon")}",
+                        AppId = appId,
+                        Bit = 0
+                    };
                 }
 
-                await Task.WhenAll(achievementTasks);
-
-                return achievementTasks.Select(x => x.Result).ToList();
+                ).ToList();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching achievements: {ex.Message}");
-                return new List<SteamAchievement>();
+                return [];
             }
         }
 

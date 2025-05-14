@@ -1,7 +1,9 @@
 ﻿@using Badluck_Achievements.Components.Data
 ﻿@using Badluck_Achievements.Components.Models
+@using Microsoft.EntityFrameworkCore
 @using SteamWebAPI2.Interfaces
 @using SteamWebAPI2.Utilities
+@using global::Components.Services
 @using global::Components.Services_Achievements.Components
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -18,23 +20,24 @@
         <div class="nav-buttons">
             <a href="/games"><i class="fas fa-gamepad"></i> Games</a>
             <a href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a>
-            <a href="/achievements"><i class="fas fa-medal"></i> Achievements</a>
+@*             <a href="/achievements"><i class="fas fa-medal"></i> Achievements</a> *@
+            <a href="/discussions"><i class="fa-solid fa-users"></i> Disucssions</a>
         </div>
 
         <div class="profile-container">
             <div class="profile">
                 <div class="user-info">
-                    @if (sesion.isAuthenticated)
+                    @if (sesion.IsAuthenticated)
                     {
-                        <a href="/user?id=@sesion.steamId" class="profile-link">
-                            <img src="@sesion.avatarUrl" alt="Profile Picture" class="profile-picture">
-                            <span>@sesion.nameIdentifier</span>
+                        <a href="/user?id=@sesion.SteamId" class="profile-link">
+                            <img src="@sesion.AvatarUrl" alt="Profile Picture" class="profile-picture">
+                            <span>@sesion.NameIdentifier</span>
                         </a>
-                        <a href="api/auth/logout">Logout</a>
+                        <a href="api/auth/logout" style="color: #ababab;">Logout</a>
                     }
                     else
                     {
-                        <a href="api/auth/login?scheme=Steam" class="steam-login">
+                        <a href="api/auth/login?scheme=Steam" class="steam-login" >
                             <img src="https://community.akamai.steamstatic.com/public/images/signinthroughsteam/sits_01.png" alt="Sign in through Steam">
                         </a>
                     }
@@ -53,7 +56,7 @@
             <div class="footer-links">
                 <a href="/about">About</a>
                 <a href="/privacy">Privacy Policy</a>
-@*              <a href="/terms">Terms of Service</a> *@
+                @*              <a href="/terms">Terms of Service</a> *@
             </div>
             <div class="social-icons">
                 <a href="https://www.youtube.com/channel/UC2uOhLFsjJWyzk3qPs7x4ig"><i class="fab fa-youtube"></i></a>
@@ -78,16 +81,16 @@
 
         var user = authState.User;
 
-        sesion.isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+        sesion.IsAuthenticated = user.Identity?.IsAuthenticated ?? false;
 
-        if (sesion.isAuthenticated)
+        if (sesion.IsAuthenticated)
         {
-            sesion.steamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!;
+            sesion.SteamId = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!;
 
-            if (sesion.steamId != null)
+            if (sesion.SteamId != null)
             {
-                sesion.steamId = sesion.steamId.Split('/').Last();
-                await LoadSteamUserInfo(sesion.steamId);
+                sesion.SteamId = sesion.SteamId.Split('/').Last();
+                await LoadSteamUserInfo(sesion.SteamId);
             }
         }
     }
@@ -99,23 +102,26 @@
         {
             var playerSummary = await SteamAchievementService.GetPlayerSummaries(steamId);
 
-            var user = AppDbContext.Users.FirstOrDefault(x => x.Id == steamId);
+            var user = AppDbContext.Users.FirstOrDefault(x => x.SteamId == steamId);
 
             if(user == null)
             {
-                await AppDbContext.Users.AddAsync(new Data.User
+                AppDbContext.Users.Add(new Data.User
                 {
-                    Id = steamId
+                    SteamId = steamId,
+                    IconPath = playerSummary.AvatarFullUrl,
+                    Username = playerSummary.Nickname
                 });
-                await AppDbContext.SaveChangesAsync();
 
-                var i = await SteamAchievementService.LoadUserStats(new HttpClient(), steamId);
+                AppDbContext.SaveChanges();
 
-                await AppDbContext.UpdateUserAchievements(steamId, i);
+                var userStats = await SteamAchievementService.LoadUserStats(new HttpClient(), steamId);
+
+                await AppDbContext.UpdateUserAchievements(steamId, userStats);
             }
 
-            sesion.avatarUrl = playerSummary.AvatarFullUrl;
-            sesion.nameIdentifier = playerSummary.Nickname;
+            sesion.AvatarUrl = playerSummary.AvatarFullUrl;
+            sesion.NameIdentifier = playerSummary.Nickname;
         }
         catch (Exception ex)
         {
