@@ -60,6 +60,13 @@ a:hover {
     border-left: 4px solid #70a1ff;
 }
 
+
+@media (max-width: 1500px) {
+    .feature-list {
+        grid-template-columns: repeat(2, minmax(300px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .about-container {
         padding: 20px;
@@ -73,3 +80,4 @@ a:hover {
         grid-template-columns: 1fr;
     }
 }
+

@@ -92,3 +92,7 @@ h1:focus {
 .user-games-grid tr {
     grid-column: 1 / -1;
 }
+
+.page {
+    flex: 1;
+}
