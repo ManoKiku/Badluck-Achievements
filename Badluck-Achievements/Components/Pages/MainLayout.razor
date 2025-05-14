@@ -1,11 +1,12 @@
-﻿﻿@using Badluck_Achievements.Components.Models
+﻿@using Badluck_Achievements.Components.Data
+﻿@using Badluck_Achievements.Components.Models
 @using SteamWebAPI2.Interfaces
 @using SteamWebAPI2.Utilities
 @using global::Components.Services_Achievements.Components
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject SteamAchievementService SteamAchievementService
-
+@inject AppDbContext AppDbContext
 
 <CascadingValue Value="@sesion">
     <header class="header">
@@ -74,6 +75,7 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
         var user = authState.User;
 
         sesion.isAuthenticated = user.Identity?.IsAuthenticated ?? false;
@@ -92,11 +94,25 @@
 
     private async Task LoadSteamUserInfo(string steamId64)
     {
-        Console.WriteLine();
+        ulong steamId = ulong.Parse(steamId64);
         try
         {
-            var playerSummary = await SteamAchievementService.GetPlayerSummaries(ulong.Parse(steamId64));
+            var playerSummary = await SteamAchievementService.GetPlayerSummaries(steamId);
 
+            var user = AppDbContext.Users.FirstOrDefault(x => x.Id == steamId);
+
+            if(user == null)
+            {
+                await AppDbContext.Users.AddAsync(new Data.User
+                {
+                    Id = steamId
+                });
+                await AppDbContext.SaveChangesAsync();
+
+                var i = await SteamAchievementService.LoadUserStats(new HttpClient(), steamId);
+
+                await AppDbContext.UpdateUserAchievements(steamId, i);
+            }
 
             sesion.avatarUrl = playerSummary.AvatarFullUrl;
             sesion.nameIdentifier = playerSummary.Nickname;

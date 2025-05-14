@@ -1,4 +1,5 @@
 ﻿using AspNet.Security.OpenId.Steam;
+using Badluck_Achievements.Components.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 [ApiController]
 public class AuthController : Controller
 {
+    private readonly AppDbContext _appDbContext;
+    public AuthController(AppDbContext context)
+    {
+        _appDbContext = context;
+    }
+
     [HttpGet("login")]
     public IActionResult Login(string returnUrl = "/")
     {

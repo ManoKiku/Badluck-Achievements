@@ -36,14 +36,14 @@ namespace Components.Services_Achievements.Components
             return response.Data;
         }
 
-		public async Task<OwnedGamesResultModel?> GetOwnedGames(ulong steamId)
-		{
+        public async Task<OwnedGamesResultModel?> GetOwnedGames(ulong steamId)
+        {
             var data = await _steamFactory.CreateSteamWebInterface<PlayerService>()
                 .GetOwnedGamesAsync(steamId, includeAppInfo: true, includeFreeGames: true);
             return data.Data;
-		}
+        }
 
-		public async Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> GetGlobalAchievementPercentagesForAppAsync(uint appId)
+        public async Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> GetGlobalAchievementPercentagesForAppAsync(uint appId)
         {
             var response = await _steamFactory.
                 CreateSteamWebInterface<SteamUserStats>().
@@ -64,27 +64,27 @@ namespace Components.Services_Achievements.Components
         public async Task<PlayerSummaryModel> GetPlayerSummaries(ulong steamUserId)
         {
             var response = await _steamFactory.
-                CreateSteamWebInterface<SteamUser>().GetPlayerSummariesAsync(new ReadOnlyCollection<ulong>(new List<ulong>() { steamUserId}));
-            return response.Data.First();   
+                CreateSteamWebInterface<SteamUser>().GetPlayerSummariesAsync(new ReadOnlyCollection<ulong>(new List<ulong>() { steamUserId }));
+            return response.Data.First();
         }
 
-		public async Task<UserStats?> LoadUserStats(HttpClient httpClient, ulong steamId)
-		{
-			try
-			{
-				UserStats? stats = new UserStats();
+        public async Task<UserStats?> LoadUserStats(HttpClient httpClient, ulong steamId)
+        {
+            try
+            {
+                UserStats? stats = new UserStats();
 
-				var games = await GetOwnedGames(steamId);
+                var games = await GetOwnedGames(steamId);
 
-				httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
-				httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Badluck-Achievements");
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-				var list = new List<List<OwnedGameModel?>>();
+                var list = new List<List<OwnedGameModel?>>();
 
-				for (int i = 0; i < games.GameCount; i += 400)
-				{
-					list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(400, games.GameCount - i)));
-				}
+                for (int i = 0; i < games.GameCount; i += 400)
+                {
+                    list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(400, games.GameCount - i)));
+                }
 
                 var urls = list.Select((x) =>
                 {
@@ -148,26 +148,26 @@ namespace Components.Services_Achievements.Components
                 }
 
                 stats.totalGames = games.GameCount;
-				stats.hoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
+                stats.hoursPlayed = games.OwnedGames.Sum(x => x.PlaytimeForever.TotalHours);
 
-				return stats;
-			}
-			catch
-			{
-				return null;
-			}
-		}
+                return stats;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
-		public async Task<Tuple<List<SteamPlayerGame>?, UserStats>> GetPlayerGames(ulong steamId, UserStats stats = null)
+        public async Task<Tuple<List<SteamPlayerGame>?, UserStats>> GetPlayerGames(ulong steamId, UserStats stats = null)
         {
             HttpClient httpClient = new HttpClient();
             var playerInterface = _steamFactory.CreateSteamWebInterface<PlayerService>();
             var responseGames = await playerInterface.GetOwnedGamesAsync(steamId, includeAppInfo: true, includeFreeGames: true);
             var games = responseGames.Data.OwnedGames;
 
-			var list = new List<List<OwnedGameModel?>>();
+            var list = new List<List<OwnedGameModel?>>();
 
-            if(stats == null)
+            if (stats == null)
             {
                 stats = await LoadUserStats(httpClient, steamId);
             }
@@ -180,10 +180,10 @@ namespace Components.Services_Achievements.Components
                 playtime2Weeks = g.PlaytimeLastTwoWeeks?.TotalHours,
                 iconUrl = g.ImgIconUrl,
                 img = $"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{g.AppId}/header.jpg",
-                achievementsCount = stats.games.Find(x=> x.appId == g.AppId).totalAhievements,
+                achievementsCount = stats.games.Find(x => x.appId == g.AppId).totalAhievements,
                 completedAchievements = stats.games.Find(x => x.appId == g.AppId).completedAchievements,
             }).ToList(), stats);
-		}
+        }
 
         public async Task<List<SteamAchievement>> GetAllPlayerAchievements(ulong steamId)
         {
@@ -202,7 +202,7 @@ namespace Components.Services_Achievements.Components
                         resultDict.TryAdd(game.AppId, achievements);
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
@@ -228,13 +228,13 @@ namespace Components.Services_Achievements.Components
                 Task<IReadOnlyCollection<GlobalAchievementPercentageModel>> apiAchievementsTask = GetGlobalAchievementPercentagesForAppAsync(appId);
                 await Task.WhenAll(schemaTask, apiAchievementsTask);
 
-                ISteamWebResponse<PlayerAchievementResultModel>? response = null; 
-                
+                ISteamWebResponse<PlayerAchievementResultModel>? response = null;
+
                 try
                 {
                     response = await responseTask;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
@@ -279,11 +279,11 @@ namespace Components.Services_Achievements.Components
                         };
                     });
                 }
-                   
+
                 await Task.WhenAll(achievementTasks);
 
-                return achievementTasks.Select(x=> x.Result).ToList();
-            } 
+                return achievementTasks.Select(x => x.Result).ToList();
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching achievements: {ex.Message}");

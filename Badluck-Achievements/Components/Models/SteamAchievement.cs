@@ -14,5 +14,7 @@
         public string? iconUrl { get; set; } = string.Empty;
         // App id
         public ulong appId { get; set; } = 0;
+        // achievement bit 
+        public uint bit { get; set; } = 0;
     }
 }

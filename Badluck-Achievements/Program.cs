@@ -1,11 +1,20 @@
 using AspNet.Security.OpenId.Steam;
 using Badluck_Achievements.Components;
-using Badluck_Achievements.Components.Pages;
+using Badluck_Achievements.Components.Data;
 using Components.Services_Achievements.Components;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("AppDbContextConnection") ?? throw new InvalidOperationException("Connection string 'AppDbContextConnection' not found.");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
+
+builder.Services.AddControllersWithViews();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -14,6 +23,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddMemoryCache();
 
 SteamAchievementService steamAchievementService = new SteamAchievementService(builder.Configuration["ApiKeys:SteamApiKey"]!);
+
 builder.Services.AddSingleton(steamAchievementService).
     AddSingleton(new BadluckAchievementsService(builder.Environment, steamAchievementService, builder.Configuration["ApiKeys:SteamApiKey"]!, builder.Configuration["ApiKeys:NewsApiKey"]!));
 
