@@ -63,6 +63,7 @@
 .discussion-item {
     padding: 20px;
     border-bottom: 1px solid #303C55;
+    background: #2a2a2a;
 }
 
 .discussion-item:last-child {
@@ -76,10 +77,11 @@
 }
 
 .discussion-author {
-    color: #64ffda;
-    font-size: 0.9em;
+    color: white;
+    font-size: 1.2em;
     margin-bottom: 8px;
     display: inline-block;
+    margin-left: 10px;
 }
 
 .discussion-title {

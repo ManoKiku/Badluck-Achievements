@@ -1,7 +1,9 @@
-﻿@page "/discussions"
-@using Badluck_Achievements.Components.Data
+﻿@using Badluck_Achievements.Components.Data
 @using Badluck_Achievements.Components.Models
+@using Microsoft.EntityFrameworkCore
 @inject AppDbContext DbContext
+@inject NavigationManager NavigationManager
+
 @rendermode InteractiveServer
 
 <PageTitle>Badluck Achievements - Discussions</PageTitle>
@@ -17,29 +19,56 @@
 	</div>
 
 	<div class="discussions-list">
-		@foreach(var discussion in discussions)
+		@if (isLoading)
 		{
-			<div class="discussion-item">
-				<img class="discussion-avatar" src="@discussion.Author.IconPath" alt="Avatar" />
-				<div class="discussion-author">@discussion.Author.Username</div>
-				<div class="discussion-title">@discussion.Title</div>
-				<div class="discussion-content">@discussion.Content.Substring(0, Math.Min(150, discussion.Content.Length))...</div>
-			</div>
+			<span>Discussions are loading</span>
+		}
+		else if (toShow == null || !toShow.Any())
+		{
+			<span>No discussions to show</span>
+		}
+		else
+		{
+			@foreach (var discussion in toShow)
+			{
+				<div class="discussion-item">
+					@if (discussion.Author != null)
+					{
+						<img class="discussion-avatar" src="@discussion.Author.IconPath" alt="Avatar" />
+						<div class="discussion-author">@discussion.Author.Username</div>
+					}
+					<div class="discussion-title">@discussion.Title</div>
+					@if (discussion.Content != null)
+					{
+						<div class="discussion-content">
+							@discussion.Content.Substring(0, Math.Min(150, discussion.Content.Length))...
+						</div>
+					}
+				</div>
+			}
 		}
 	</div>
 
 	<div class="pagination">
-		@for (int i = 0; i < (int)Math.Ceiling(discussions.Count / 5.0); ++i)
+		@if (isLoading)
 		{
-			<div class="page-number@(i + 1 == page ? "active" : string.Empty)">@(i + 1)</div>
+			<span>Discussions are loading</span>
+		}
+		else if (discussions == null || !discussions.Any())
+		{
+			<span>No discussions to show</span>
+		}
+		else
+		{
+			@for (int i = 0; i < maxPage; ++i)
+			{
+				<div class="page-number@(i + 1 == page ? " active" : string.Empty)" @onclick="() => ChangePage(i + 1)">@(i + 1)</div>
+			}
 		}
 	</div>
 </div>
 
 @code {
-	[CascadingParameter]
-	public Sesion? sesion { get; set; }
-
 	private List<Discussion> discussions = new List<Discussion>();
 	private List<Discussion> toShow = new List<Discussion>();
 	private int page = 1;
@@ -48,24 +77,36 @@
 	private string title { get; set; }
 	private string description { get; set; }
 
+	private bool isLoading = true;
 
-	protected override void OnInitialized()
+	[Parameter]
+	public Sesion? sesion { get; set; }
+
+	protected override void OnParametersSet()
 	{
-		discussions = DbContext.Discussions.ToList();
-		List<Discussion[]> pages = new List<Discussion[]>();
+		if (!isLoading)
+			return;
 
-		maxPage = (int)Math.Ceiling(discussions.Count / 5.0);
+		discussions = DbContext.Discussions.Include(x => x.Author).ToList();
+
+		maxPage = Convert.ToInt32(Math.Ceiling(discussions.ToList().Count / 5.0));
 
 		if (maxPage == 0)
 			maxPage = 1;
 
-		if (page <= 0)
-			page = 1;
-		else if (page > maxPage)
+		if (page > maxPage)
 			page = maxPage;
+		else if (page <= 0)
+			page = 1;
 
-		if (discussions.Count != 0)
-			toShow = discussions.Chunk(5).ElementAt(page - 1).ToList();
+		var chunks = discussions.Chunk(5);
+
+		if (chunks.Count() != 0)
+		{
+			toShow = chunks.ElementAt(page - 1).ToList();
+		}
+
+		isLoading = false;
 	}
 
 	private void ChangePage(int newPage)
@@ -75,19 +116,25 @@
 
 		page = newPage;
 
-		if (discussions != null)
-			toShow = discussions.Chunk(5).ElementAt(page - 1).ToList();
+		var chunks = discussions.Chunk(5);
+
+		if (chunks.Count() != 0)
+		{
+			toShow = chunks.ElementAt(page - 1).ToList();
+		}
 	}
 
 	private void CreateDiscussion(MouseEventArgs args)
 	{
+		if (sesion == null)
+		{
+			NavigationManager.NavigateTo("/", true);
+			return;
+		}
+
 		var steamId = Convert.ToUInt64(sesion.SteamId);
 
-		Console.WriteLine(steamId);
-
 		var author = DbContext.Users.FirstOrDefault(x => x.SteamId == steamId);
-
-		Console.WriteLine(steamId);
 
 		if (author == null)
 			return;
