@@ -28,7 +28,7 @@
                 <div class="progress-container">
                     <div class="progress-header">
                         <p style="display:block; color: white; font-weight: bold;">@user.UserAchievements.Count achievements</p>
-                        <p>Better than @((leaders.Count - position + 1) / leaders.Count * 100)% of users</p>
+                        <p>Better than @((double)(leaders.Count - position + 1) / leaders.Count * 100)% of users</p>
                     </div>
                     <div class="progress-bar">
                         <div class="progress" style="width: @((leaders.Count - position + 1) / leaders.Count * 100)%"></div>
@@ -72,10 +72,8 @@
         leaders = AppDbContext.LeaderBoards
             .Include(x => x.User)
             .Include(x => x.User.UserAchievements)
-            .OrderBy(x => x.Score)
+            .OrderByDescending(x => x.Score)
             .ToList();
-
-        
 
         if(sesion.IsAuthenticated)
         {

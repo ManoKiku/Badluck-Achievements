@@ -1,0 +1,124 @@
+﻿.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.add-discussion {
+    margin-top: 20px;
+    background: #2a2a2a;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.discussion-form input,
+.discussion-form textarea {
+    width: 100%;
+    background: var(--dark-gray);
+    border: 2px solid var(--main-blue);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+}
+
+.discussion-form textarea {
+    height: 120px;
+    resize: vertical;
+}
+
+.submit-btn {
+    background: var(--main-blue);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: auto;
+    display: block;
+    margin-right: auto;
+    width: 100%;
+    transition: all 0.1s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.submit-btn:hover {
+    opacity: .8;
+}
+
+.submit-btn:active {
+    transform: translateY(2px);
+}
+
+.discussions-list {
+    background: #172a45;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.discussion-item {
+    padding: 20px;
+    border-bottom: 1px solid #303C55;
+}
+
+.discussion-item:last-child {
+    border-bottom: none;
+}
+
+.discussion-avatar {
+    height: 50px;
+    width: 50px;
+    border-radius: 25px;
+}
+
+.discussion-author {
+    color: #64ffda;
+    font-size: 0.9em;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+.discussion-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #ccd6f6;
+}
+
+.discussion-content {
+    color: #8892b0;
+    line-height: 1.6;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 25px 0;
+    gap: 10px;
+}
+
+.page-number {
+    padding: 8px 15px;
+    background: #233554;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.page-number:hover {
+    background: #2962ff;
+}
+
+.page-number.active {
+    background: #2962ff;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.9em;
+    color: #8892b0;
+    margin-bottom: 15px;
+}

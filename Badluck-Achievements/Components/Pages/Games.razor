@@ -7,7 +7,7 @@
 @inject BadluckAchievementsService BadluckAchievementsService
 @inject SteamAchievementService SteamAchievementService
 @inject IJSRuntime JSRuntime
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <div class="game-search-container">
     <div class="filters-container">
@@ -38,7 +38,7 @@
             <p class="price-display text-main-blue mt-2" id="priceDisplay">Any price</p>
         </div>
 
-        <button class="apply-button btn mt-4" @onclick="() => LoadGames()">Apply Filters</button>
+        <button class="apply-button mt-4" @onclick="() => LoadGames()">Apply Filters</button>
     </div>
 
     <div class="main-content">

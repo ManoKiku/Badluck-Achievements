@@ -2,12 +2,8 @@
     text-decoration: none;
 }
 
-.profile-link {
-    color: white;
-    font-size: 15px;
-}
 
-.header {
+.header, .mobile-nav-buttons {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -21,6 +17,11 @@
     top: 0;
     z-index: 100;
     width: 100%;
+}
+
+.mobile-nav-buttons {
+    bottom: 0;
+    display: none !important;
 }
 
 .logo-container {
@@ -40,17 +41,16 @@
     transform: scale(1.02);
 }
 
-.nav-buttons {
+.nav-buttons, .mobile-nav-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
     width: 100%;
-    margin: 15px 0;
     order: 3;
 }
 
-.nav-buttons a {
+.nav-buttons a, .mobile-nav-buttons a {
     color: white;
     text-decoration: none;
     font-size: 14px;
@@ -61,7 +61,7 @@
     white-space: nowrap;
 }
 
-.nav-buttons a:hover {
+.nav-buttons a:hover, .mobile-nav-buttons a{
     background-color: rgba(255, 255, 255, 0.3);
 }
 
@@ -78,30 +78,6 @@
     align-items: center;
     gap: 10px;
 }
-
-.profile-picture {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    transition: transform 0.3s;
-}
-
-.profile-picture:hover {
-    transform: scale(1.1);
-}
-
-.steam-login {
-    height: 30px;
-    transition: transform 0.3s;
-    color: #2a2a2a;
-}
-
-.steam-login:hover {
-    transform: scale(1.05);
-}
-
 
 footer {
     background: rgba(0, 29, 61, 0.9);
@@ -150,6 +126,16 @@ footer {
 
 .social-icons a:hover {
     transform: translateY(-5px);
+}
+
+@media (max-width: 1200px) {
+    .mobile-nav-buttons {
+        display: flex !important;
+    }
+
+    .nav-buttons {
+        display: none;
+    }
 }
 
 @media (min-width: 992px) {
@@ -211,6 +197,10 @@ footer {
 @media (max-width: 767px) {
     body {
         font-size: 14px;
+    }
+
+    .mobile-nav-buttons a {
+        font-size: 11px !important;
     }
 
     .header {

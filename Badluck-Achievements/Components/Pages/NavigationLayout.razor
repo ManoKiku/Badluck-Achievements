@@ -1,0 +1,22 @@
+﻿@using Badluck_Achievements.Components.Models
+<div class="user-info">
+    @if (sesion.IsAuthenticated)
+    {
+        <a href="/user?id=@sesion.SteamId" class="profile-link">
+            <img src="@sesion.AvatarUrl" alt="Profile Picture" class="profile-picture">
+            <span>@sesion.NameIdentifier</span>
+        </a>
+        <a href="api/auth/logout" style="color: #ababab;">Logout</a>
+    }
+    else
+    {
+        <a href="api/auth/login?scheme=Steam" class="steam-login">
+            <img src="https://community.akamai.steamstatic.com/public/images/signinthroughsteam/sits_01.png" alt="Sign in through Steam">
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Sesion sesion { get; set; }
+}

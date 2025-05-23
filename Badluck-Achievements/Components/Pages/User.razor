@@ -127,7 +127,7 @@
 											{
 												<div class="game-progress">
 													<div class="progress-bar"
-															style="width: @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))%"></div>
+													style="width: @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))%"></div>
 													<span> @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))% (@i.CompletedAchievements/@i.achievementsCount)</span>
 												</div>
 
@@ -221,7 +221,6 @@
 
 
 @code {
-	public Sesion sesion { get; set; }
 	private string userId;
 
 	private UserStats? stats;
@@ -241,7 +240,7 @@
 
 		if (queryParams.TryGetValue("id", out var idValue))
 		{
-			userId = idValue.FirstOrDefault();
+			userId = idValue.FirstOrDefault()!;
 		}
 
 		ulong steamId = ulong.Parse(userId);
@@ -293,6 +292,9 @@
 {
 	void OnFilter(ChangeEventArgs e)
 	{
+		if (playerGames == null)
+			return;
+
 		string selectedString = e.Value.ToString();
 
 		switch (selectedString)

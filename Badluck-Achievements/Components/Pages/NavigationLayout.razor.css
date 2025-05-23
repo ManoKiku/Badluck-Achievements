@@ -1,0 +1,31 @@
+﻿a {
+    text-decoration: none;
+}
+
+.profile-link {
+    color: white;
+    font-size: 15px;
+}
+
+.profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s;
+}
+
+.profile-picture:hover {
+    transform: scale(1.1);
+}
+
+.steam-login {
+    height: 30px;
+    transition: transform 0.3s;
+    color: #2a2a2a;
+}
+
+.steam-login:hover {
+    transform: scale(1.05);
+}

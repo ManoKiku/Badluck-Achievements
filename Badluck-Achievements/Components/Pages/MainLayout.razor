@@ -27,20 +27,7 @@
         <div class="profile-container">
             <div class="profile">
                 <div class="user-info">
-                    @if (sesion.IsAuthenticated)
-                    {
-                        <a href="/user?id=@sesion.SteamId" class="profile-link">
-                            <img src="@sesion.AvatarUrl" alt="Profile Picture" class="profile-picture">
-                            <span>@sesion.NameIdentifier</span>
-                        </a>
-                        <a href="api/auth/logout" style="color: #ababab;">Logout</a>
-                    }
-                    else
-                    {
-                        <a href="api/auth/login?scheme=Steam" class="steam-login" >
-                            <img src="https://community.akamai.steamstatic.com/public/images/signinthroughsteam/sits_01.png" alt="Sign in through Steam">
-                        </a>
-                    }
+                    <NavigationLayout sesion="sesion"/>
                 </div>
             </div>
         </div>
@@ -49,7 +36,11 @@
     <div class="page">
         @Body
     </div>
-
+    <div class="mobile-nav-buttons">
+        <a href="/games"><i class="fas fa-gamepad"></i> Games</a>
+        <a href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a href="/discussions"><i class="fa-solid fa-users"></i> Disucssions</a>
+    </div>
     <footer>
         <div class="footer-content">
             <div>© 2025 Badluck Achievements. All rights reserved.</div>

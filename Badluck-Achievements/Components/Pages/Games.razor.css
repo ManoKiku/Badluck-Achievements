@@ -82,14 +82,14 @@
 
 .apply-button {
     background: var(--main-blue);
-    color: var(--dark-blue);
+    color: white;
     border: none;
     padding: 0.75rem 2rem;
-    border-radius: 8px;
     font-weight: bold;
     transition: all 0.1s ease;
     text-transform: uppercase;
     width: 100%;
+    border-radius: 8px;
 }
 
 .apply-button:hover {
