@@ -1,0 +1,300 @@
+﻿@using Badluck_Achievements.Components.Data
+@using Badluck_Achievements.Components.Models
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+@inject AppDbContext AppDbContext
+@rendermode InteractiveServer
+
+<div class="container">
+    <div class="discussion-container">
+        <div class="discussion-header">
+            @if (isLoading)
+            {
+                <span>Loading</span>
+            }
+            else if (!isLoading && discussion == null)
+            {
+                <span>ERROR</span>
+            }
+            else
+            {
+                <div class="avatar">
+                    <img src="@discussion.Author.IconPath" />
+                </div>
+                <div class="author-info">
+                    <div class="discussion-author">@discussion.Author.Username</div>
+                    <div class="discussion-time">@discussion.CreatedAt</div>
+                </div>
+                <div class="actions">
+                    <button class="like-btn@((discussion.Likes != null && user != null) ? (discussion.Likes.FirstOrDefault(x => x.UserId == user.UserId) != null ? " liked" : string.Empty) : string.Empty)" @onclick="LikeDiscussion">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        <span>@discussion.Likes.Count</span>
+                    </button>
+                    @if(user != null)
+                    {
+                        @if (discussion.AuthorId == user.UserId)
+                        {
+                            <button class="delete-btn" @onclick="DeleteDiscussion">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b6b">
+                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+                                </svg>
+                            </button>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        @if (isLoading)
+        {
+            <span>Loading</span>
+        }
+        else if (!isLoading && discussion == null)
+        {
+            <span>ERROR</span>
+        }
+        else
+        {
+            <h1 class="discussion-title">@discussion.Title</h1>
+            <div class="discussion-content">
+                @discussion.Content
+            </div>
+        }
+
+
+        <div class="comments-section">
+            <form class="comment-form" onsubmit="return false;">
+                <textarea placeholder="Write a comment..." @bind="comment"></textarea>
+                <button class="submit-btn" @onclick="AddComment">Send</button>
+            </form>
+            @if (isLoading)
+            {
+                <span>Loading</span>
+            }
+            else if (!isLoading && discussion == null)
+            {
+                <span>ERROR</span>
+            }
+            else if (discussion.Comments != null)
+            {
+                @foreach (var comment in discussion.Comments.ToList().OrderByDescending(x => x.CommentId))
+                {
+                    var id = comment.CommentId;
+
+                    <div class="comment-item">
+                        <a href="/user?id=@comment.Author.SteamId">
+                            <div class="avatar">
+                                <img src="@comment.Author.IconPath" />
+                            </div>
+                        </a>
+                        <div class="comment-content">
+                            <a href="/user?id=@comment.Author.SteamId">
+                                <div class="comment-author">@comment.Author.Username</div>
+                            </a>
+                            <div class="comment-time">@comment.CreatedAt</div>
+                            <div class="comment-text">@comment.Content</div>
+                            <div class="actions">
+                                <button class="like-btn@((comment.Likes != null && user != null) ? (comment.Likes.FirstOrDefault(x => x.UserId == user.UserId) != null ? " liked" : string.Empty) : string.Empty)" @onclick="() => LikeComment(id)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    </svg>
+
+                                    @if (comment.Likes != null)
+                                    {
+                                        <span>@comment.Likes.Count </span>
+                                    }
+                                    else
+                                    {
+                                        <span>0</span>
+                                    }
+
+                                </button>
+                                @if (user != null)
+                                {
+                                    @if (user.UserId == comment.AuthorId)
+                                    {
+                                        <button class="delete-btn" @onclick="() => DeleteComment(id)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b6b">
+                                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+                                            </svg>
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+<script src="~/js/userDiscussion.js"></script>
+
+@code {
+    [Parameter]
+    public Sesion? sesion { get; set; }
+
+    private int discussionId { get; set; } = 0;
+    private Discussion? discussion { get; set; }
+
+    private Data.User? user { get; set; }
+
+    bool isLoading = true;
+
+    private string? comment { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        HttpClient httpClient = HttpClientFactory.CreateClient();
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParams = QueryHelpers.ParseQuery(uri.Query);
+
+        ulong steamId = ulong.Parse(sesion.SteamId == string.Empty ? "0" : sesion.SteamId);
+
+        if (steamId == 0)
+        {
+            user = null;
+        }
+        else
+        {
+            user = AppDbContext.Users.FirstOrDefault(x => x.SteamId == steamId);
+        }
+
+
+        if (queryParams.TryGetValue("id", out var idValue))
+        {
+            discussionId =  int.Parse(idValue.FirstOrDefault())!;
+        }
+
+        discussion = AppDbContext.Discussions
+            .Include(x => x.Author)
+            .Include(x => x.Likes)
+            .ThenInclude(x => x.User)
+            .Include(x => x.Comments)
+            .ThenInclude(x => x.Likes)
+            .Include(x => x.Comments)
+            .ThenInclude(x => x.Author)
+            .FirstOrDefault(x => x.DiscussionId == discussionId);
+
+        isLoading = false;
+    }
+
+    private void DeleteDiscussion()
+    {
+        if (user.UserId != discussion.AuthorId)
+            return;
+
+        AppDbContext.Discussions.Remove(AppDbContext.Discussions.First(x => x.DiscussionId == discussionId));
+        AppDbContext.SaveChanges();
+        NavigationManager.NavigateTo("/discussions", true);
+    }
+
+    private void LikeDiscussion()
+    {
+        if (user == null)
+        {
+            NavigationManager.NavigateTo("/api/auth/login", true);
+            return;
+        }
+
+        var like = discussion.Likes.FirstOrDefault(x => x.UserId == user.UserId);
+
+        if(like == null)
+        {
+            AppDbContext.Likes.Add(new Like
+                {
+                    UserId = user.UserId,
+                    DiscussionId = discussionId,
+                });
+        }
+        else
+        {
+            AppDbContext.Likes.Remove(like);
+        }
+
+        AppDbContext.SaveChanges();
+    }
+
+    private void AddComment()
+    {
+        if (user == null)
+        {
+            NavigationManager.NavigateTo("/api/auth/login", true);
+            return;
+        }
+
+        if (comment == null || comment.Trim() == string.Empty)
+            return;
+
+        if (user.UserId != discussion.AuthorId)
+            return;
+
+        AppDbContext.Comments.Add(new Comment { AuthorId = user.UserId, Content = comment, DiscussionId = discussionId, Author = user });
+        AppDbContext.SaveChanges();
+
+        comment = string.Empty;
+    }
+
+    private void LikeComment(int commentId)
+    {
+        if (user == null)
+        {
+            NavigationManager.NavigateTo("/api/auth/login", true);
+            return;
+        }
+
+        var comment = AppDbContext.Comments.FirstOrDefault(x => x.CommentId == commentId);
+
+        if (comment == null)
+            return;
+
+        Like like = null;
+
+        if (comment.Likes != null)
+        {
+            like = comment.Likes.FirstOrDefault(x => x.UserId == user.UserId);
+        }
+        else
+        {
+            comment.Likes = new List<Like>();
+        }
+
+        if (like == null)
+        {
+            AppDbContext.Likes.Add(new Like
+                {
+                    UserId = user.UserId,
+                    CommentId = comment.CommentId,
+                });
+        }
+        else
+        {
+            AppDbContext.Likes.Remove(like);
+        }
+
+        AppDbContext.SaveChanges();
+    }
+
+    private void DeleteComment(int commentId)
+    {
+        if (user == null)
+        {
+            NavigationManager.NavigateTo("/api/auth/login", true);
+            return;
+        }
+
+        var comment = AppDbContext.Comments.FirstOrDefault(x => x.CommentId == commentId);
+
+        if (comment == null)
+            return;
+
+        if (user.UserId != comment.AuthorId)
+            return;
+
+        AppDbContext.Comments.Remove(comment);
+        AppDbContext.SaveChanges();
+    }
+}

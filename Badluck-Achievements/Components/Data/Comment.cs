@@ -9,6 +9,8 @@ namespace Badluck_Achievements.Components.Data
         public int CommentId { get; set; }
 
         public string Content { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
 
         [ForeignKey("User")]
         public int? AuthorId { get; set; }

@@ -23,27 +23,38 @@
 		{
 			<span>Discussions are loading</span>
 		}
-		else if (toShow == null || !toShow.Any())
+		else if (!(toShow == null || !toShow.Any()))
 		{
-			<span>No discussions to show</span>
-		}
-		else
-		{
-			@foreach (var discussion in toShow)
+			@foreach (var discussion in toShow.OrderByDescending(x => x.DiscussionId))
 			{
 				<div class="discussion-item">
-					@if (discussion.Author != null)
-					{
-						<img class="discussion-avatar" src="@discussion.Author.IconPath" alt="Avatar" />
-						<div class="discussion-author">@discussion.Author.Username</div>
-					}
-					<div class="discussion-title">@discussion.Title</div>
-					@if (discussion.Content != null)
-					{
-						<div class="discussion-content">
-							@discussion.Content.Substring(0, Math.Min(150, discussion.Content.Length))...
+					<a href="/user?id=@discussion.Author.SteamId">
+						@if (discussion.Author != null)
+						{
+							<img class="discussion-avatar" src="@discussion.Author.IconPath" alt="Avatar" />
+							<div class="discussion-author">@discussion.Author.Username</div>
+						}
+					</a>
+					<a href="/discussion?id=@discussion.DiscussionId">
+						<div class="discussion-title">@discussion.Title</div>
+						@if (discussion.Content != null)
+						{
+							<div class="discussion-content">
+								@discussion.Content.Substring(0, Math.Min(150, discussion.Content.Length))...
+							</div>
+						}
+					</a>
+					<div class="discussion-stats">
+						<div class="likes">
+							<i class="fa-solid fa-heart"></i>
+							@discussion.Likes.Count
 						</div>
-					}
+						<div class="comments">
+							<i class="fa-solid fa-comment"></i>
+							@discussion.Comments.Count
+						</div>
+					</div>
+
 				</div>
 			}
 		}
@@ -62,7 +73,11 @@
 		{
 			@for (int i = 0; i < maxPage; ++i)
 			{
-				<div class="page-number@(i + 1 == page ? " active" : string.Empty)" @onclick="() => ChangePage(i + 1)">@(i + 1)</div>
+				var pageNumber = i + 1;
+				<div class="page-number @(pageNumber == page ? "active" : "")"
+				@onclick="() => ChangePage(pageNumber)">
+					@pageNumber
+				</div>
 			}
 		}
 	</div>
@@ -87,7 +102,11 @@
 		if (!isLoading)
 			return;
 
-		discussions = DbContext.Discussions.Include(x => x.Author).ToList();
+		discussions = DbContext.Discussions
+			.Include(x => x.Author)
+			.Include(x => x.Likes)
+			.Include(x => x.Comments)
+			.ToList();
 
 		maxPage = Convert.ToInt32(Math.Ceiling(discussions.ToList().Count / 5.0));
 
@@ -124,8 +143,12 @@
 		}
 	}
 
+	private bool isCreated = false;
 	private void CreateDiscussion(MouseEventArgs args)
 	{
+		if (isCreated)
+			return;
+
 		if (sesion == null)
 		{
 			NavigationManager.NavigateTo("/", true);
@@ -139,12 +162,15 @@
 		if (author == null)
 			return;
 
-		DbContext.Discussions.Add(new Discussion
+		var entity = DbContext.Discussions.Add(new Discussion
         {
             AuthorId = author.UserId,
             Content = description,
             Title = title
         });
 		DbContext.SaveChanges();
+
+		isCreated = true;
+		NavigationManager.NavigateTo($"discussion?id={entity.Entity.DiscussionId}", true);
 	}
 }
