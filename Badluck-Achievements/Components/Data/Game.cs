@@ -9,6 +9,6 @@ namespace Badluck_Achievements.Components.Data
         public ulong GameId { get; set; }
         public ulong TotalAchievements { get; set; }
 
-        ICollection<Achievement> Achievements { get; set; }
+        public ICollection<Achievement> Achievements { get; set; }
     }
 }

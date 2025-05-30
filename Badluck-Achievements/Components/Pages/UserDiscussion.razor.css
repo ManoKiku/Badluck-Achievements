@@ -59,6 +59,7 @@
     color: #c0c0c0;
     line-height: 1.6;
     margin-bottom: 25px;
+    word-wrap: break-word;
 }
 
 .actions {

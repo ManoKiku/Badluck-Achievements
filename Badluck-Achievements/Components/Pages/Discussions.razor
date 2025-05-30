@@ -13,7 +13,7 @@
 		<div class="discussion-form" onsubmit="return false;">
 			<input type="text" placeholder="Title" required @bind="title">
 			<textarea placeholder="Description (max 1000 symbols)" maxlength="1000" required @bind="description"></textarea>
-			<div class="char-counter"><span id="charCount">0</span>/1000</div>
+			<div class="char-counter"><span id="charCount">@description.Length</span>/1000</div>
 			<button class="submit-btn" @onclick="CreateDiscussion">Create discussion</button>
 		</div>
 	</div>
@@ -89,8 +89,8 @@
 	private int page = 1;
 	private int maxPage = 1;
 
-	private string title { get; set; }
-	private string description { get; set; }
+	private string title { get; set; } = string.Empty;
+	private string description { get; set; } = string.Empty;
 
 	private bool isLoading = true;
 
@@ -151,7 +151,13 @@
 
 		if (sesion == null)
 		{
-			NavigationManager.NavigateTo("/", true);
+			NavigationManager.NavigateTo("/api/auth/login", true);
+			return;
+		}
+
+		if(sesion.SteamId == string.Empty)
+		{
+			NavigationManager.NavigateTo("/api/auth/login", true);
 			return;
 		}
 

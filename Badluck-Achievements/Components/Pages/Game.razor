@@ -14,15 +14,13 @@
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-@page "/Game"
-
 <div class="container">
     <div class="left-column">
         @if(isLoadingAnalytics)
         {
             <p><em>Loading data...</em></p>
         }
-        else if(analytics is not null)
+        else if(analytics != null)
         {
             <div class="game-header" style="background-color: #2a2a2a">
                 <div class="header-content">
@@ -197,7 +195,7 @@
 </script>
 
 @code{
-    [CascadingParameter]
+    [Parameter]
     public Sesion? sesion { get; set; }
 
     private string? id;
@@ -244,8 +242,6 @@
         analytics = (JObject)JObject.Parse(json)[id]!["data"]!;
         json = await reviewsTask.Result.Content.ReadAsStringAsync();
         reviews = (JObject)JObject.Parse(json);
-
-        Console.WriteLine(achievements.Count());
 
         isLoadingAchievements = false;
         isLoadingAnalytics = false;

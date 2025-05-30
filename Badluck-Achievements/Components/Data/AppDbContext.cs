@@ -1,6 +1,8 @@
 ﻿using Badluck_Achievements.Components.Models;
 using Microsoft.EntityFrameworkCore;
+using Steam.Models.SteamCommunity;
 using SteamWebAPI2.Interfaces;
+using System.Collections.Generic;
 
 namespace Badluck_Achievements.Components.Data
 {
@@ -17,6 +19,7 @@ namespace Badluck_Achievements.Components.Data
         public DbSet<Discussion> Discussions => Set<Discussion>();
         public DbSet<Like> Likes => Set<Like>();
         public DbSet<Comment> Comments => Set<Comment>();
+        public DbSet<Game> Games => Set<Game>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -38,6 +41,14 @@ namespace Badluck_Achievements.Components.Data
                 entity.HasOne(d => d.User)
                   .WithMany(u => u.UserAchievements)
                   .HasForeignKey(d => d.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<Achievement>(entity =>
+            {
+                entity.HasOne(d => d.Game)
+                  .WithMany(u => u.Achievements)
+                  .HasForeignKey(d => d.GameId)
                   .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -95,7 +106,7 @@ namespace Badluck_Achievements.Components.Data
             base.ConfigureConventions(configurationBuilder);
         }
 
-        public async Task CalculateUserScore(ulong steamId)
+        public async Task CalculateUserScoreAsync(ulong steamId)
         {
             var User = await Users
                 .Include(d => d.UserAchievements)
@@ -137,7 +148,7 @@ namespace Badluck_Achievements.Components.Data
             await SaveChangesAsync();
         }
 
-        public async Task UpdateUserAchievements(ulong steamId, UserStats stats)
+        public async Task UpdateUserAchievementsAsync(ulong steamId, UserStats stats)
         {
             var User = await Users
                 .Include(d => d.UserAchievements)
@@ -145,14 +156,36 @@ namespace Badluck_Achievements.Components.Data
                 .FirstOrDefaultAsync(x => x.SteamId == steamId) 
                 ?? throw new InvalidDataException("There is no such user in DB!");
 
-            List<Achievement> achievements = new List<Achievement>();
+            List<Game> newGames = new List<Game>();
+            List<Game> allGames = await Games.ToListAsync();
+            foreach (var game in stats.Games)
+            {
+                var dbGame = allGames.FirstOrDefault(x => x.GameId == game.AppId);
+
+                if(dbGame == null)
+                {
+                    newGames.Add(new Game
+                    {
+                        GameId = game.AppId,
+                        TotalAchievements = game.TotalAhievements
+                    });
+                }
+            }
+
+            await Games.AddRangeAsync(newGames);
+            await SaveChangesAsync();
+
+            List<Achievement> newAchievements = new List<Achievement>();
+            List<Achievement> allAchievements = await Achievements.ToListAsync();
 
             foreach (var achievement in stats.Achievements)
             {
-                var a = await Achievements.FirstOrDefaultAsync(x => x.Name == achievement.Name && x.GameId == achievement.AppId && x.Bit == achievement.Bit);
-                if (a == null)
+                var dbAchievement = allAchievements
+                    .FirstOrDefault(x => x.Name == achievement.Name && x.GameId == achievement.AppId && x.Bit == achievement.Bit);
+
+                if (dbAchievement == null)
                 {
-                    achievements.Add(new Achievement
+                    newAchievements.Add(new Achievement
                     {
                         GameId = achievement.AppId,
                         Name = achievement.Name,
@@ -163,13 +196,15 @@ namespace Badluck_Achievements.Components.Data
                 }
             }
 
-            await Achievements.AddRangeAsync(achievements);
+            await Achievements.AddRangeAsync(newAchievements);
             await SaveChangesAsync();
+
+            allAchievements = await Achievements.ToListAsync();
 
             List<UserAchievement> userAchievements = new List<UserAchievement>();
             foreach (var achievement in stats.Achievements)
             {
-                var i = await Achievements.FirstOrDefaultAsync(x => x.Name == achievement.Name && x.GameId == achievement.AppId && x.Bit == achievement.Bit);
+                var i = allAchievements.FirstOrDefault(x => x.Name == achievement.Name && x.GameId == achievement.AppId && x.Bit == achievement.Bit);
 
                 userAchievements.Add(new UserAchievement
                 {
@@ -178,9 +213,10 @@ namespace Badluck_Achievements.Components.Data
                 });
             }
 
+            allAchievements.Clear();
             await UserAchievements.AddRangeAsync(userAchievements);
             await SaveChangesAsync();
-            await CalculateUserScore(steamId);
+            await CalculateUserScoreAsync(steamId);
         }
     }
 }

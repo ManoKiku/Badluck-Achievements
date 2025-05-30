@@ -112,7 +112,7 @@
 
                 var userStats = await SteamAchievementService.LoadUserStats(new HttpClient(), steamId);
 
-                await AppDbContext.UpdateUserAchievements(steamId, userStats);
+                await AppDbContext.UpdateUserAchievementsAsync(steamId, userStats);
             }
 
             sesion.AvatarUrl = playerSummary.AvatarFullUrl;

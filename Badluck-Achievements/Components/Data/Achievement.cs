@@ -11,7 +11,9 @@ namespace Badluck_Achievements.Components.Data
         public double Rarity { get; set; }
         public uint Bit { get; set; }
         public string IconUrl { get; set; }
+        [ForeignKey("Game")]
         public ulong GameId { get; set; }
+        public Game Game { get; set; }
 
         public ICollection<UserAchievement> UserAchievements { get; set; }
     }

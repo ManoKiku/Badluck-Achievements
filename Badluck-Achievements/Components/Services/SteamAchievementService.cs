@@ -235,7 +235,6 @@ namespace Components.Services
                 }
 
                 string jsonAchievements = await responeAchievements.Content.ReadAsStringAsync();
-                Console.WriteLine(jsonAchievements);
 
                 var achievements = JObject.Parse(jsonAchievements);
                 return achievements["response"]!["achievements"]!.Select(x =>
