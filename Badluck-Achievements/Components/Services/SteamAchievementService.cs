@@ -76,9 +76,9 @@ namespace Components.Services
 
                 var list = new List<List<OwnedGameModel?>>();
 
-                for (int i = 0; i < games.GameCount; i += 400)
+                for (int i = 0; i < games.GameCount; i += 350)
                 {
-                    list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(400, games.GameCount - i)));
+                    list.Add(games.OwnedGames.ToList().GetRange(i, (int)Math.Min(350, games.GameCount - i)));
                 }
 
                 var urls = list.Select((x) =>
@@ -154,7 +154,7 @@ namespace Components.Services
             }
         }
 
-        public async Task<Tuple<List<SteamPlayerGame>?, UserStats>> GetPlayerGames(ulong steamId, UserStats stats = null)
+        public async Task<Tuple<List<SteamPlayerGame>?, UserStats>> GetPlayerGames(ulong steamId, UserStats? stats = null)
         {
             HttpClient httpClient = new HttpClient();
             var playerInterface = _steamFactory.CreateSteamWebInterface<PlayerService>();

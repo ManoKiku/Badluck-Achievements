@@ -96,3 +96,23 @@ h1:focus {
 .page {
     flex: 1;
 }
+
+.submit-btn {
+    background: var(--main-blue);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: auto;
+    display: block;
+    margin-right: auto;
+    width: 100%;
+    transition: all 0.1s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.submit-btn:hover {
+    opacity: .8;
+}

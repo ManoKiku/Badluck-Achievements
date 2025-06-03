@@ -11,10 +11,31 @@
 <div class="container">
 	<div class="add-discussion">
 		<div class="discussion-form" onsubmit="return false;">
-			<input type="text" placeholder="Title" required @bind="title">
-			<textarea placeholder="Description (max 1000 symbols)" maxlength="1000" required @bind="description"></textarea>
-			<div class="char-counter"><span id="charCount">@description.Length</span>/1000</div>
-			<button class="submit-btn" @onclick="CreateDiscussion">Create discussion</button>
+			@if(user != null)
+			{
+				if(!user.IsBanned)
+				{
+					<input type="text" placeholder="Title" required @bind="title">
+					<textarea placeholder="Description (max 1000 symbols)" maxlength="1000" required @bind="description"></textarea>
+					<div class="char-counter"><span id="charCount">@description.Length</span>/1000</div>
+					<button class="submit-btn" @onclick="CreateDiscussion">Create discussion</button>
+				}
+				else
+				{
+					<input type="text" placeholder="Title" required disabled>
+					<textarea placeholder="Description (max 1000 symbols)" maxlength="1000" required disabled></textarea>
+					<div class="char-counter"><span id="charCount">@description.Length</span>/1000</div>
+					<button class="submit-btn" disabled>Create discussion</button>
+				}
+			}
+			else
+			{
+				<input type="text" placeholder="Title" required disabled>
+				<textarea placeholder="Description (max 1000 symbols)" maxlength="1000" required disabled></textarea>
+				<div class="char-counter"><span id="charCount">@description.Length</span>/1000</div>
+				<button class="submit-btn" disabled>Create discussion</button>
+			}
+
 		</div>
 	</div>
 
@@ -94,6 +115,8 @@
 
 	private bool isLoading = true;
 
+	private Data.User? user {get;set;}
+
 	[Parameter]
 	public Sesion? sesion { get; set; }
 
@@ -126,6 +149,9 @@
 		}
 
 		isLoading = false;
+
+		var steamId = Convert.ToUInt64(sesion.SteamId);
+		user = DbContext.Users.FirstOrDefault(x => x.SteamId == steamId);
 	}
 
 	private void ChangePage(int newPage)
@@ -149,28 +175,15 @@
 		if (isCreated)
 			return;
 
-		if (sesion == null)
-		{
-			NavigationManager.NavigateTo("/api/auth/login", true);
+		if (user == null)
 			return;
-		}
 
-		if(sesion.SteamId == string.Empty)
-		{
-			NavigationManager.NavigateTo("/api/auth/login", true);
-			return;
-		}
-
-		var steamId = Convert.ToUInt64(sesion.SteamId);
-
-		var author = DbContext.Users.FirstOrDefault(x => x.SteamId == steamId);
-
-		if (author == null)
+		if (user.IsBanned)
 			return;
 
 		var entity = DbContext.Discussions.Add(new Discussion
         {
-            AuthorId = author.UserId,
+            AuthorId = user.UserId,
             Content = description,
             Title = title
         });

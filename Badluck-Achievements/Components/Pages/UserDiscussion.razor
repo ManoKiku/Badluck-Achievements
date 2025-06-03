@@ -34,10 +34,10 @@
                         </svg>
                         <span>@discussion.Likes.Count</span>
                     </button>
-                    @if(user != null)
+                    @if (user != null)
                     {
-                        @if (discussion.AuthorId == user.UserId)
-                        {
+                        @if (discussion.AuthorId == user.UserId || user.IsAdmin)
+                            {
                             <button class="delete-btn" @onclick="DeleteDiscussion">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b6b">
                                     <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
@@ -114,7 +114,7 @@
                                 </button>
                                 @if (user != null)
                                 {
-                                    @if (user.UserId == comment.AuthorId)
+                                    @if (user.UserId == comment.AuthorId || user.IsAdmin)
                                     {
                                         <button class="delete-btn" @onclick="() => DeleteComment(id)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b6b">
@@ -184,7 +184,7 @@
 
     private void DeleteDiscussion()
     {
-        if (user.UserId != discussion.AuthorId)
+        if (user.UserId != discussion.AuthorId && !user.IsAdmin)
             return;
 
         AppDbContext.Discussions.Remove(AppDbContext.Discussions.First(x => x.DiscussionId == discussionId));
@@ -220,6 +220,8 @@
 
     private void AddComment()
     {
+        Console.WriteLine("fds");
+
         if (user == null)
         {
             NavigationManager.NavigateTo("/api/auth/login", true);
@@ -229,7 +231,7 @@
         if (comment == null || comment.Trim() == string.Empty)
             return;
 
-        if (user.UserId != discussion.AuthorId)
+        if (user.IsBanned)
             return;
 
         AppDbContext.Comments.Add(new Comment { AuthorId = user.UserId, Content = comment, DiscussionId = discussionId, Author = user });
@@ -243,6 +245,11 @@
         if (user == null)
         {
             NavigationManager.NavigateTo("/api/auth/login", true);
+            return;
+        }
+
+        if(user.IsBanned)
+        {
             return;
         }
 
@@ -291,7 +298,7 @@
         if (comment == null)
             return;
 
-        if (user.UserId != comment.AuthorId)
+        if (user.UserId != comment.AuthorId && !user.IsAdmin)
             return;
 
         AppDbContext.Comments.Remove(comment);

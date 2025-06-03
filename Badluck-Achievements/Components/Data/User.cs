@@ -11,8 +11,7 @@ namespace Badluck_Achievements.Components.Data
         public string Username { get; set; }
         public string IconPath { get; set; }
         public bool IsAdmin { get; set; } = false;
-        public bool IsBannded { get; set; } = false;
-        public DateTime BanTime { get; set; }
+        public bool IsBanned { get; set; } = false;
 
         public ICollection<Discussion> Discussions { get; set; }
         public ICollection<Like> Likes { get; set; }

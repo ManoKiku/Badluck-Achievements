@@ -23,6 +23,19 @@
     margin-bottom: 20px;
 }
 
+h3 {
+    text-align: center;
+}
+
+.user-tag {
+    text-align: center;
+    padding: 10px;
+    background: rgba(30, 60, 114, 1);
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
 .profile-avatar {
     width: 150px;
     height: 150px;
@@ -110,7 +123,7 @@
 }
 
 .user-games-grid {
-    max-height: 750px;
+    max-height: 800px;
     overflow-x: hidden;
     overflow-y: inherit;
     display: grid;

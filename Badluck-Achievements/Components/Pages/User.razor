@@ -7,7 +7,6 @@
 @using System.Diagnostics;
 @using Microsoft.JSInterop
 
-@page "/User"
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory HttpClientFactory
 @inject BadluckAchievementsService BadluckAchievementsService
@@ -39,57 +38,91 @@
 								<img src="@model.AvatarFullUrl" alt="User Avatar" class="profile-avatar">
 								<h2 class="profile-username">@model.Nickname</h2>
 								<span class="profile-steamid">SteamID: @model.SteamId</span>
+								@if(profileUser != null)
+								{
+									<p>Registred on service</p>
+								}
 							</div>
 						}
 
-						@if (isLoadingStats && !isRendered)
+						@if (!isPrivateAccount)
 						{
-							<p><em>Stats is loading</em></p>
-						}
-						else if (stats is null)
-						{
-							<p><em>No stats available.</em></p>
+							@if (isLoadingStats && !isRendered)
+							{
+								<p><em>Stats is loading</em></p>
+							}
+							else if (stats is null)
+							{
+								<p><em>No stats available.</em></p>
+							}
+							else
+							{
+								<div class="profile-stats">
+									<div class="stat-item">
+										<span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
+										<span class="stat-value">@stats.TotalGames</span>
+									</div>
+									<div class="stat-item">
+										<span class="stat-label"><i class="fas fa-medal"></i> Completed Achievements</span>
+										<span class="stat-value">@stats.CompletedAchievements</span>
+									</div>
+									<div class="stat-item">
+										<span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
+										<span class="stat-value">@((int)(stats.CalculateCompetionRate() * 100))%</span>
+									</div>
+									<div class="stat-item">
+										<span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
+										<span class="stat-value">@((int)stats.HoursPlayed) hrs</span>
+									</div>
+								</div>
+							}
 						}
 						else
 						{
-							<div class="profile-stats">
-								<div class="stat-item">
-									<span class="stat-label"><i class="fas fa-gamepad"></i> Games Owned</span>
-									<span class="stat-value">@stats.TotalGames</span>
-								</div>
-								<div class="stat-item">
-									<span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-									<span class="stat-value">@stats.TotalAchievements</span>
-								</div>
-								<div class="stat-item">
-									<span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
-									<span class="stat-value">@((int)(stats.CalculateCompetionRate() * 100))%</span>
-								</div>
-								<div class="stat-item">
-									<span class="stat-label"><i class="fas fa-clock"></i> Total Playtime</span>
-									<span class="stat-value">@((int)stats.HoursPlayed) hrs</span>
-								</div>
-							</div>
+							<h3>Profile is private</h3>
 						}
+
+						@if(profileUser != null)
+						{
+							if(profileUser.IsBanned)
+							{
+								<p class="user-tag" style="background: red;">Banned on service</p>
+							}
+							if(profileUser.IsAdmin)
+							{
+								<p class="user-tag">Admin</p>
+							}
+							if (currentUser != null)
+							{
+								if (profileUser.UserId != currentUser.UserId && currentUser.IsAdmin)
+								{
+									<button class="submit-btn" @onclick="BanAction">@(profileUser.IsBanned ? "Unban" : "Ban")</button>
+								}
+							}
+						}
+
 						<div class="profile-badges">
-							<h3><i class="fas fa-award"></i> Rare Badges</h3>
-							<div class="badges-grid">
-								@if(isLoadingStats && !isRendered)
-								{
-									<p><em>Achievements is loading</em></p>
-								}
-								else if (stats is null)
-								{
-									<p><em>No achievements available.</em></p>
-								}
-								else if (stats.Achievements.Any())
-								{
-									foreach (var i in stats.Achievements.OrderBy(x => x.AchievePercentage).Take(16))
+							@if (!isPrivateAccount)
+							{
+								<h3><i class="fas fa-award"></i> Rare Badges</h3>
+								<div class="badges-grid">
+									@if (isLoadingStats && !isRendered)
 									{
-										<img src="@i.IconUrl" alt="@i.Name" class="badge-icon" title="@i.AchievePercentage%">
+										<p><em>Achievements is loading</em></p>
 									}
-								}
-							</div>
+									else if (stats is null)
+									{
+										<p><em>No achievements available.</em></p>
+									}
+									else if (stats.Achievements.Any())
+									{
+										foreach (var i in stats.Achievements.OrderBy(x => x.AchievePercentage).Take(16))
+										{
+											<img src="@i.IconUrl" alt="@i.Name" class="badge-icon" title="@i.AchievePercentage%">
+										}
+									}
+								</div>
+							}
 						</div>
 					</div>
 				</div>
@@ -107,63 +140,73 @@
 					</div>
 
 					<div class="user-games-grid">
-						@if(isGamesLoading)
+						@if (!isPrivateAccount)
 						{
-							<p><em>Games is loading</em></p>
-						}
-						else if (gamesToShow is null || !gamesToShow.Any())
-						{
-							<p><em>No games data</em></p>
-						}
-						else
-						{
-							<Virtualize Items="@gamesToShow" Context="i" OverscanCount="40" SpacerElement="tr">
-								<a href="/game?id=@i.appID">
-									<div class="user-game-card">
-										<img src="@i.img" alt="Game Banner" class="game-banner" loading="lazy">
-										<div class="game-overlay">
-											<div class="game-title">@i.name</div>
-											@if (i.achievementsCount != 0)
-											{
-												<div class="game-progress">
-													<div class="progress-bar"
-													style="width: @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))%"></div>
-													<span> @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))% (@i.CompletedAchievements/@i.achievementsCount)</span>
-												</div>
+							@if(isGamesLoading)
+							{
+								<p><em>Games is loading</em></p>
+							}
+							else if (gamesToShow is null || !gamesToShow.Any())
+							{
+								<p><em>No games data</em></p>
+							}
+							else
+							{
+								<Virtualize Items="@gamesToShow" Context="i" OverscanCount="40" SpacerElement="tr">
+									<a href="/game?id=@i.appID">
+										<div class="user-game-card">
+											<img src="@i.img" alt="Game Banner" class="game-banner" loading="lazy">
+											<div class="game-overlay">
+												<div class="game-title">@i.name</div>
+												@if (i.achievementsCount != 0)
+												{
+													<div class="game-progress">
+														<div class="progress-bar"
+														style="width: @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))%"></div>
+														<span> @((int)(i.CompletedAchievements / (double)i.achievementsCount * 100))% (@i.CompletedAchievements/@i.achievementsCount)</span>
+													</div>
 
-											}
-											<div class="game-playtime">@((int)i.PlaytimeForever) hrs</div>
+												}
+												<div class="game-playtime">@((int)i.PlaytimeForever) hrs</div>
+											</div>
 										</div>
-									</div>
-								</a>
-							</Virtualize>
+									</a>
+								</Virtualize>
+							}
 						}
 					</div>
 				</div> 
 
 				<div class="profile-right">
-					<div class="analytics-card">
-						<h2><i class="fas fa-chart-pie"></i> Analytics</h2>
-						<div class="chart-container">
-							<div class="profile-flow-chart">
-								<h4 style="margin:auto;padding-bottom: 10px;">Achievements</h4>
-								<canvas id="achievementChart"></canvas>
-								<div class="chart-legend">
-									<div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
-									<div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Uncompleted</div>
+					@if (!isPrivateAccount)
+					{
+						<div class="analytics-card">
+							<h2><i class="fas fa-chart-pie"></i> Analytics</h2>
+							<div class="chart-container">
+								<div class="profile-flow-chart">
+									<h4 style="margin:auto;padding-bottom: 10px;">Achievements</h4>
+									<canvas id="achievementChart"></canvas>
+									<div class="chart-legend">
+										<div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Completed</div>
+										<div class="legend-item"><span class="legend-color" style="background: #F44336;"></span> Uncompleted</div>
+									</div>
 								</div>
-							</div>
-							<div class="profile-flow-chart">
-								<h4 style="margin:auto;padding-bottom: 10px;">Games</h4>
-								<canvas id="gamesChart"></canvas>
-								<div class="chart-legend">
-									<div class="legend-item"><span class="legend-color" style="background: #6E62D6;"></span> Done</div>
-									<div class="legend-item"><span class="legend-color" style="background: #06B6D4;"></span> Ongoing</div>
-									<div class="legend-item"><span class="legend-color" style="background: #656565;"></span> Not Started</div>
+								<div class="profile-flow-chart">
+									<h4 style="margin:auto;padding-bottom: 10px;">Games</h4>
+									<canvas id="gamesChart"></canvas>
+									<div class="chart-legend">
+										<div class="legend-item"><span class="legend-color" style="background: #6E62D6;"></span> Done</div>
+										<div class="legend-item"><span class="legend-color" style="background: #06B6D4;"></span> Ongoing</div>
+										<div class="legend-item"><span class="legend-color" style="background: #656565;"></span> Not Started</div>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
+					}
+					else
+					{
+						<h3>Profile is private</h3>
+					}
 				</div>
 			</div>
 		</article>
@@ -173,7 +216,13 @@
 <script src="/js/userFlowChart.js"></script>
 
 @code {
+	[Parameter]
+	public Sesion? sesion { get; set; }
+
 	public string userId { get; set; } = string.Empty;
+
+	private Data.User? profileUser { get; set; }
+	private Data.User? currentUser { get; set; }
 
 	private UserStats? stats;
 	private PlayerSummaryModel model;
@@ -183,6 +232,8 @@
 	private bool isLoadingStats = true;
 	private bool isLoadingModel = true;
 	private bool isGamesLoading = true;
+
+	private bool isPrivateAccount = false;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -196,28 +247,69 @@
 		}
 		ulong steamId = ulong.Parse(userId);
 
-		Task<PlayerSummaryModel> modelTask = SteamAchievementService.GetPlayerSummaries(steamId);
-		Task<UserStats?> statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
-
-		await Task.WhenAll(modelTask, statsTask);
-
-		model = modelTask.Result; 
-		stats = statsTask.Result;
-
-		var buff = await SteamAchievementService.GetPlayerGames(steamId, stats);
-		playerGames = buff.Item1;
-
-		if(playerGames != null)
+		try
 		{
-			playerGames = playerGames.OrderByDescending(x => x.achievementsCount)
-						.OrderByDescending(x => x.CompletedAchievements).ToList();
+			Task<PlayerSummaryModel> modelTask = SteamAchievementService.GetPlayerSummaries(steamId);
+			Task<UserStats?> statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
+
+			await Task.WhenAll(modelTask, statsTask);
+
+			model = modelTask.Result;
+			if (model.ProfileVisibility != ProfileVisibility.Public)
+			{
+				isPrivateAccount = true;
+				throw new Exception("User is private");
+			}
+
+			stats = statsTask.Result;
+
+			var buff = await SteamAchievementService.GetPlayerGames(steamId, stats);
+			playerGames = buff.Item1;
+
+			if (playerGames != null)
+			{
+				playerGames = playerGames.OrderByDescending(x => x.achievementsCount)
+							.OrderByDescending(x => x.CompletedAchievements).ToList();
+
+				if(!playerGames.Any())
+				{
+					isPrivateAccount = true;
+
+				}
+			}
+
+
+			gamesToShow = playerGames;
+		}
+		catch(Exception e)
+		{
+			Console.WriteLine(e.Message);
+			isPrivateAccount = true;
+		}
+		finally
+		{
+			isLoadingStats = false;
+			isLoadingModel = false;
+			isGamesLoading = false;
+
+			ulong sessionSteamId = 0;
+			if(sesion != null)
+			{
+				sessionSteamId = Convert.ToUInt64(sesion.SteamId);
+			}
+
+			profileUser = AppDbContext.Users.FirstOrDefault(x => x.SteamId == steamId);
+
+			if(steamId == sessionSteamId)
+			{
+				currentUser = profileUser;
+			}
+			else
+			{
+				currentUser = AppDbContext.Users.FirstOrDefault(x => x.SteamId == sessionSteamId);
+			}
 		}
 
-		gamesToShow = playerGames;
-
-		isLoadingStats = false;
-		isLoadingModel = false;
-		isGamesLoading = false;
 	}
 
 	bool isRendered = false;
@@ -226,6 +318,7 @@
 		if (!firstRender && !isRendered && stats is not null)
 		{
 			isRendered = true;
+
 			await JSRuntime.InvokeVoidAsync("renderAchievementsFlowChart", stats.CompletedAchievements, stats.TotalAchievements - stats.CompletedAchievements);
 
 			var games = stats.Games.Where(x => x.TotalAhievements != 0).ToList();
@@ -236,6 +329,19 @@
 			await JSRuntime.InvokeVoidAsync("renderGamesFlowChart", completedGames, inProgressGames,
 				allAchievementsGames - completedGames - inProgressGames);
 		}
+	}
+
+	private void BanAction(MouseEventArgs args)
+	{
+		if (currentUser == null || profileUser == null)
+			return;
+
+		if (!currentUser.IsAdmin)
+			return;
+
+		profileUser.IsBanned = !profileUser.IsBanned;
+		AppDbContext.Update(profileUser);
+		AppDbContext.SaveChanges();
 	}
 }
 

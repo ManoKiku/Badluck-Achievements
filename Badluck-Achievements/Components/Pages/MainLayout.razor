@@ -65,13 +65,15 @@
 
 @code {
 
-    public Sesion? sesion { get; set; } = new Sesion();
+    public Sesion? sesion { get; set; }
 
     [Inject]
     private IConfiguration Configuration { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        sesion = new Sesion();
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
         var user = authState.User;

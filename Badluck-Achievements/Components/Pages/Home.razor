@@ -1,10 +1,13 @@
 ﻿@page "/"
+@using Badluck_Achievements.Components.Data
 @using Badluck_Achievements.Components.Models
 @using System.Globalization
+@using Microsoft.EntityFrameworkCore
 @using global::Components.Services
 @using global::Components.Services_Achievements.Components
 @using System.Text;
 
+@inject AppDbContext AppDbContext
 @inject IHttpClientFactory HttpClientFactory
 @inject IConfiguration Configuration
 @inject SteamAchievementService SteamAchievementService
@@ -78,10 +81,10 @@
                         <div class="achievement-details">
                             <div class="achievement-title">@item.Name</div>
                             <div class="achievement-meta">
-                                <span>Rarity: @item.AchievePercentage%</span>
+                                <span>Rarity: @item.Rarity%</span>
                             </div>
                             <div class="achievement-progress">
-                                <div class="progress-bar" style="width: @item.AchievePercentage%"></div>
+                                <div class="progress-bar" style="width: @item.Rarity%"></div>
                             </div>
                         </div>
                     </div>
@@ -93,25 +96,21 @@
         {
             <p><em>Loading stats...</em></p>
         }
-        else if (stats is not null)
+        else if (currentUser != null)
         {
             <section class="user-stats">
                 <h2><i class="fas fa-chart-line"></i> Your Stats</h2>
                 <div class="stat-item">
-                    <span class="stat-label"><i class="fas fa-medal"></i> Total Achievements</span>
-                    <span class="stat-value">@stats.TotalAchievements</span>
+                    <span class="stat-label"><i class="fas fa-medal"></i> Completed Achievements </span>
+                    <span class="stat-value">@currentUser.UserAchievements.Count</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label"><i class="fas fa-gamepad"></i> Total games</span>
-                    <span class="stat-value">@stats.TotalGames</span>
+                    <span class="stat-value">@gameCount</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label"><i class="fas fa-star"></i> Completion Rate</span>
-                    <span class="stat-value">@((int)(@stats.CalculateCompetionRate() * 100))%</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label"><i class="fas fa-ranking-star"></i> Global Rank</span>
-                    <span class="stat-value">#1</span>
+                    <span class="stat-label"><i class="fas fa-star"></i> Global Rank</span>
+                    <span class="stat-value">#@leaderboardTop</span>
                 </div>
             </section>
         }
@@ -121,8 +120,6 @@
 @code {
     private List<SteamGame>? popularGames;
     private List<GamingNews>? news;
-    private List<SteamAchievement>? achievements;
-    private UserStats? stats;
 
     private bool isLoadingNews = true;
     private bool isLoadingGames = true;
@@ -132,6 +129,11 @@
     [CascadingParameter]
     public Sesion? sesion { get; set; }
 
+    private Data.User? currentUser { get; set; }
+    private List<Achievement> achievements { get; set; }
+    private uint gameCount { get; set; } = 0;
+    private int leaderboardTop = 1;
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -139,33 +141,51 @@
             HttpClient httpClient = HttpClientFactory.CreateClient();
             var popularGamesTask = BadluckAchievementsService.LoadGamesAsync(11, httpClient : httpClient);
             var newsTask = BadluckAchievementsService.LoadGamingNewsAsync(httpClient);
-            Task<List<SteamAchievement>?>? achievementsTask = null;
-            Task<UserStats?>? statsTask = null;
+
 
             if (sesion!.IsAuthenticated)
             {
                 var steamId = ulong.Parse(sesion.SteamId);
-                achievementsTask = BadluckAchievementsService.LoadLatestAchievements(steamId, httpClient);
-                statsTask = SteamAchievementService.LoadUserStats(httpClient, steamId);
+                currentUser = AppDbContext.Users
+                    .Include(x => x.UserAchievements)
+                    .ThenInclude(x => x.Achievement)
+                    .ThenInclude(x => x.Game)
+                    .FirstOrDefault(x => x.SteamId == steamId);
+                var buff = await SteamAchievementService.GetOwnedGames(steamId);
+                 
+                gameCount = buff != null ? (uint)buff.OwnedGames.Count : 0;
+
+                leaderboardTop = AppDbContext.LeaderBoards
+                    .Include(x => x.User)
+                    .ToList()
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => x.User)
+                    .ToList()
+                    .IndexOf(currentUser) + 1;
+
+                Random random = new Random();
+
+                achievements = currentUser.UserAchievements
+                    .Select(x => x.Achievement)
+                    .ToList();
+
+                var allGames = achievements.Select(x => x.Game).DistinctBy(x => x.GameId);
+
+                ulong randomId = allGames.ElementAt(random.Next(0, allGames.Count() - 1)).GameId;
+
+                achievements = achievements
+                    .Where(x => x.GameId == randomId)
+                    .OrderBy(x => x.Rarity)
+                    .Take(5)
+                    .ToList();
             }
 
             var tasks = new List<Task> { popularGamesTask, newsTask };
-            if (sesion!.IsAuthenticated)
-            {
-                tasks.Add(achievementsTask);
-                tasks.Add(statsTask);
-            }
 
             await Task.WhenAll(tasks);
 
             popularGames = await popularGamesTask;
             news = await newsTask;
-
-            if (sesion.IsAuthenticated)
-            {
-                achievements = await achievementsTask;
-                stats = await statsTask;
-            }
 
             isLoadingNews = false;
             isLoadingGames = false;

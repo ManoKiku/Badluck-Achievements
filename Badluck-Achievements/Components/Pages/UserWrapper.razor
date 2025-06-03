@@ -1,0 +1,9 @@
+﻿@page "/user"
+@using Badluck_Achievements.Components.Models
+
+<User sesion="@sesion" />
+
+@code {
+	[CascadingParameter]
+	public Sesion? sesion { get; set; }
+}
